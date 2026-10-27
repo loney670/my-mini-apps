@@ -65,7 +65,7 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
             <select id="deleteUnit" aria-label="Единица времени"><option value="60">Минут</option><option value="3600">Часов</option><option value="86400">Дней</option></select>
           </div>
           <div class="row" style="margin-top:9px"><button class="btn" id="startCountdown" type="button">▶ Запустить таймер</button><button class="btn" id="resetCountdown" type="button">Сбросить таймер</button></div>
-          <div class="hint">Обратный отсчёт будет отображаться прямо в тексте поста. Чтобы обновлять его в опубликованном сообщении и удалить сообщение по окончании времени, нужен постоянно работающий сервер.</div>
+          <div class="hint">Обратный отсчёт будет отображаться прямо в тексте поста.</div>
         </div>
         <div class="field">
           <label>Расположение кнопок</label>
@@ -79,7 +79,6 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px"><label style="margin:0">Кнопки под постом</label><span id="buttonCount" class="eyebrow" style="margin:0;letter-spacing:1px">0 кнопок</span></div>
           <div id="buttonList" class="button-list"></div>
           <button class="btn full" id="addButton" style="margin-top:12px">＋ Добавить кнопку</button>
-          <div class="hint">У каждой кнопки есть свой текст и ссылка. Можно добавлять несколько рядов; для Telegram указывается URL, начинающийся с https:// или http://.</div>
         </div>
         <button class="btn primary full" id="saveTemplate">Сохранить как шаблон</button>
       </div>
@@ -93,13 +92,13 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
           <div class="preview-content"><div id="previewText" class="preview-text"><span class="preview-empty">Текст поста появится здесь…</span></div><div id="previewInlineCountdown" class="inline-countdown" style="display:none">⏳ До удаления: <strong id="inlineCountdownValue">—</strong></div></div>
           <div id="previewKeyboard" class="preview-keyboard"></div>
         </div>
-        <div class="preview-note">Внешний вид может немного отличаться от Telegram. Кнопки в предпросмотре не открывают ссылки.</div>
+        <div class="preview-note">Внешний вид может немного отличаться от Telegram.</div>
       </div>
     </div>
   </section>
   <section id="templatesView" class="panel template-area">
     <div class="panel-head"><h2>Мои шаблоны</h2><button class="btn primary small" id="newTemplate">＋ Добавить шаблон</button></div>
-    <div class="panel-body"><div id="templateGrid" class="template-grid"></div><p class="hint">Шаблоны сохраняются локально в этом браузере на этом устройстве.</p></div>
+    <div class="panel-body"><div id="templateGrid" class="template-grid"></div><p class="hint">Шаблоны сохраняются локально в этом браузере.</p></div>
   </section>
   <section class="send-panel">
     <h2>Отправка публикации</h2>
@@ -112,13 +111,16 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
 </div>
 <div class="toast" id="toast"></div>
 
-<!-- Модалки оставляем для шаблонов и ссылок -->
+<!-- Модалки -->
 <div class="modal-backdrop" id="textLinkModal"><div class="modal"><h2>Добавить ссылку к тексту</h2><div class="field"><label>Выделенный текст</label><input type="text" id="linkPhrase" readonly></div><div class="field"><label for="linkUrl">Ссылка (URL)</label><input type="url" id="linkUrl" placeholder="https://example.com"></div><div class="modal-actions"><button class="btn" id="cancelTextLink">Отмена</button><button class="btn primary" id="applyTextLink">Добавить ссылку</button></div></div></div>
 <div class="modal-backdrop" id="templateModal"><div class="modal"><h2 id="modalTitle">Сохранить шаблон</h2><div class="field"><label for="templateName">Название шаблона</label><input type="text" id="templateName" placeholder="Например, Розыгрыш"></div><div class="modal-actions"><button class="btn" id="cancelModal">Отмена</button><button class="btn primary" id="confirmTemplate">Сохранить</button></div></div></div>
 <div class="modal-backdrop" id="utilityModal"><div class="modal"><h2 id="utilityTitle">Введите значение</h2><div id="utilityMessage" class="send-modal-note"></div><div class="field" id="utilityInputWrap"><input type="text" id="utilityInput" autocomplete="off"></div><div id="utilityChoices" class="button-list"></div><div class="modal-actions"><button class="btn" id="utilityCancel" type="button">Отмена</button><button class="btn primary" id="utilityOk" type="button">Готово</button></div></div></div>
 
 <script>
 (() => {
+  // ============================================================
+  // SUPABASE ПОДКЛЮЧЕНИЕ
+  // ============================================================
   const supabaseUrl = 'https://idyqutqkqixkbxtzlweg.supabase.co';
   const supabaseKey = 'sb_publishable_prrQdebQvjKKTLgHGnb00A_nXCOXy1w'; 
   const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -142,6 +144,9 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
     checkUserSubscription();
   });
 
+  // ============================================================
+  // ЛОГИКА КОНСТРУКТОРА
+  // ============================================================
   const $ = id => document.getElementById(id);
   const MAX_BUTTONS = 100;
   let buttons = [];
@@ -182,7 +187,7 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
   $('changeOfferAmount').addEventListener('click',async()=>{const entered=await utilityDialog({title:'Изменить сумму оффера',message:'Введи любую сумму в ⭐ STARS.',value:String(offerAmount),placeholder:'Например, 250'});if(entered===null)return;const amount=String(entered).trim();if(!/^\d+(?:[.,]\d+)?$/.test(amount)||Number(amount)<=0){showToast('Введи корректную сумму больше нуля');return;}offerAmount=amount.replace(',', '.');syncOfferTemplate();showToast('Сумма обновлена');});
   $('changeOfferGift').addEventListener('click',async()=>{const name=await utilityDialog({title:'Изменить подарок',message:'Введи название подарка.',value:offerGiftName==='подарок'?'':offerGiftName,placeholder:'Например, Victory Medal #2729',ok:'Далее'});if(name===null)return;const cleanName=String(name).trim();if(!cleanName){showToast('Введи название подарка');return;}const url=await utilityDialog({title:'Ссылка на подарок',message:'Вставь ссылку (можно оставить пустой).',value:offerGiftUrl,placeholder:'https://t.me/...',ok:'Сохранить'});if(url===null)return;const cleanUrl=String(url).trim();offerGiftName=cleanName.replace(/^\[|\]$/g,'');offerGiftUrl=cleanUrl;syncOfferTemplate();showToast('Подарок обновлён');});
   
-  // Custom Select logic
+  // Custom Select
   const selectBackdrop=document.createElement('div');selectBackdrop.className='custom-select-backdrop';document.body.appendChild(selectBackdrop);
   const customSelects=[];
   function closeCustomSelects(){customSelects.forEach(x=>{x.wrap.classList.remove('open');x.trigger.setAttribute('aria-expanded','false');});selectBackdrop.classList.remove('open');}
@@ -243,7 +248,7 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
     const text=$('postText').value;
     $('previewText').classList.toggle('preview-empty',!text);
     if(!text) $('previewText').innerHTML='<span class="preview-empty">Текст поста появится здесь…</span>';
-    else $('previewText').innerHTML=escapeHtml(text).replace(/\n/g, '<br>'); // Упрощенный рендер текста для примера
+    else $('previewText').innerHTML=escapeHtml(text).replace(/\n/g, '<br>');
     const keyboard=$('previewKeyboard'); keyboard.innerHTML='';
     keyboard.classList.toggle('stacked',buttonLayout==='stacked');
     const visible=buttons.filter(b=>b.text.trim());
@@ -285,18 +290,16 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
     grid.querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{templates=templates.filter(t=>t.id!==el.dataset.remove);saveTemplates();}));
   }
 
-  // --- ГЛАВНАЯ КНОПКА ОТПРАВКИ ---
+  // --- ОТПРАВКА В БОТА ---
   $('sendToBotBtn').addEventListener('click', () => {
     const p = payload();
     if (!(p.text || '').trim()) { showToast('Добавь текст поста'); return; }
     
     if (window.Telegram?.WebApp?.sendData) {
-        // Собираем данные для бота
         const sendData = {
             text: p.text,
             buttons: p.buttons
         };
-        // Отправляем боту
         window.Telegram.WebApp.sendData(JSON.stringify(sendData));
         showToast('Отправка...');
         setTimeout(() => window.Telegram.WebApp.close(), 500);
@@ -305,16 +308,11 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
     }
   });
 
-  // Инициализация
+  // Init
   syncOfferTemplate(); renderButtons(); renderTemplates();
   if (!templates.some(t => t.id === 'sayon_offer_nft_v1')) {
-      // Принудительно загружаем оффер по умолчанию, если его нет
       const offerT = templates.find(t => t.id === 'sayon_offer_nft_v1');
-      if (offerT) {
-           activeTemplateId = offerT.id; buttons = offerT.buttons; 
-           $('postText').value = offerText();
-           renderButtons();
-      }
+      if (offerT) { activeTemplateId = offerT.id; buttons = offerT.buttons; $('postText').value = offerText(); renderButtons(); }
   }
 })();
 </script>
