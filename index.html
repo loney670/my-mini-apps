@@ -9,7 +9,7 @@
 :root{--bg:#080808;--panel:#141414;--panel2:#1b1b1b;--line:#373737;--muted:#85858d;--white:#f4f4f5;--accent:#ededed;--radius:24px}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0%,#292929 0,#101010 32%,#080808 72%);color:var(--white);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh}
 button,input,textarea,select{font:inherit}button{cursor:pointer;color:inherit}.app{max-width:1180px;margin:auto;padding:22px 18px 60px}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}.brand{display:flex;align-items:center;gap:12px;font-weight:850;letter-spacing:-.8px;font-size:22px}.logo{height:42px;width:42px;border-radius:14px;background:linear-gradient(145deg,#fff,#888);color:#111;display:grid;place-items:center;font-weight:950;font-size:18px;box-shadow:0 0 28px #fff2}.status{border:1px solid #444;border-radius:30px;padding:9px 13px;color:#b8b8bd;font-size:12px;letter-spacing:1.5px;text-transform:uppercase}.status:before{content:"";display:inline-block;width:7px;height:7px;background:#ddd;border-radius:50%;margin-right:8px;box-shadow:0 0 9px #fff8}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}.brand{display:flex;align-items:center;gap:12px;font-weight:850;letter-spacing:-.8px;font-size:22px}.logo{height:42px;width:42px;border-radius:14px;background:linear-gradient(145deg,#fff,#888);color:#111;display:grid;place-items:center;font-weight:950;font-size:18px;box-shadow:0 0 28px #fff2}.status{border:1px solid #444;border-radius:30px;padding:9px 13px;color:#b8b8bd;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;transition:.3s}.status:before{content:"";display:inline-block;width:7px;height:7px;background:#ddd;border-radius:50%;margin-right:8px;box-shadow:0 0 9px #fff8}
 .hero{padding:24px 4px 20px}.eyebrow{font-size:11px;letter-spacing:4px;color:#85858d;text-transform:uppercase;margin-bottom:12px}.hero h1{font-size:clamp(30px,6vw,58px);line-height:1.02;letter-spacing:-2.4px;margin:0 0 12px;font-weight:850}.hero p{color:#a0a0a7;margin:0;max-width:620px;line-height:1.6}
 .tabs{display:flex;gap:8px;overflow:auto;padding:5px 0 18px}.tab{white-space:nowrap;border:1px solid #343434;background:#151515;color:#999;padding:12px 17px;border-radius:15px;font-size:13px;font-weight:700}.tab.active{background:#f2f2f2;color:#111;border-color:#f2f2f2}
 .layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:18px;align-items:start}.panel{background:linear-gradient(145deg,#1b1b1bf2,#101010f5);border:1px solid #424242;border-radius:26px;box-shadow:inset 0 1px #ffffff12,0 18px 60px #0006;overflow:hidden}.panel-head{padding:20px 22px 16px;border-bottom:1px solid #303030;display:flex;justify-content:space-between;align-items:center;gap:10px}.panel-head h2{font-size:16px;margin:0;letter-spacing:-.3px}.panel-body{padding:21px}.field{margin-bottom:19px}.field:last-child{margin-bottom:0}label,.field-label{display:block;color:#aaaab2;font-size:11px;letter-spacing:1.7px;text-transform:uppercase;font-weight:750;margin-bottom:9px}
@@ -25,12 +25,14 @@ input[type=text],input[type=url],textarea,select{width:100%;background:#0b0b0b;b
 footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-height:1.6}
 @media(max-width:780px){.app{padding:16px 12px 42px}.layout{grid-template-columns:1fr}.hero{padding-top:14px}.hero h1{letter-spacing:-1.5px}.panel-body{padding:17px}.preview-wrap{padding:16px}.template-grid{grid-template-columns:1fr}.topbar{margin-bottom:12px}.status{font-size:10px;padding:8px}.row.mobile-stack{flex-direction:column}}
 </style>
+<!-- Подключение библиотеки Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="app">
   <header class="topbar">
     <div class="brand"><div class="logo">S</div><span>SayonNft</span></div>
-    <div class="status">Конструктор постов</div>
+    <div class="status" id="userStatus">Загрузка...</div>
   </header>
   <section class="hero">
     <div class="eyebrow">Telegram publishing tools</div>
@@ -126,6 +128,65 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
 <div class="modal-backdrop" id="utilityModal"><div class="modal"><h2 id="utilityTitle">Введите значение</h2><div id="utilityMessage" class="send-modal-note"></div><div class="field" id="utilityInputWrap"><input type="text" id="utilityInput" autocomplete="off"></div><div id="utilityChoices" class="button-list"></div><div class="modal-actions"><button class="btn" id="utilityCancel" type="button">Отмена</button><button class="btn primary" id="utilityOk" type="button">Готово</button></div></div></div>
 <script>
 (() => {
+  // ============================================================
+  // SUPABASE ПОДКЛЮЧЕНИЕ
+  // ============================================================
+  const supabaseUrl = 'https://idyqutqkqixkbxtzlweg.supabase.co';
+  const supabaseKey = 'sb_publishable_prrQdebQvjKKTLgHGnb00A_nXCOXy1w'; 
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  async function checkUserSubscription() {
+    const tg = window.Telegram?.WebApp;
+    const userId = tg?.initDataUnsafe?.user?.id;
+    const statusEl = document.getElementById('userStatus');
+
+    if (!userId) {
+      if (statusEl) statusEl.textContent = 'Гость';
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('subscribed, sub_until')
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error("Ошибка Supabase:", error);
+        if (statusEl) statusEl.textContent = 'Ошибка БД';
+        return;
+      }
+
+      if (data && data.subscribed) {
+        if (statusEl) {
+          statusEl.innerHTML = 'PRO ✅';
+          statusEl.style.color = '#4ade80';
+          statusEl.style.borderColor = '#166534';
+        }
+      } else {
+        if (statusEl) {
+          statusEl.textContent = 'FREE';
+          statusEl.style.color = '#a0a0a7';
+        }
+      }
+    } catch (e) {
+      console.error("Ошибка запроса:", e);
+      if (statusEl) statusEl.textContent = 'Ошибка';
+    }
+  }
+
+  window.addEventListener('load', () => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+    checkUserSubscription();
+  });
+
+  // ============================================================
+  // ТВОЙ КОД КОНСТРУКТОРА
+  // ============================================================
   const $ = id => document.getElementById(id);
   const MAX_BUTTONS = 100;
   let buttons = [];
@@ -144,6 +205,7 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
   let offerGiftName = 'подарок';
   let offerGiftUrl = '';
   let utilityResolve = null;
+  
   function utilityDialog({title,message='',value='',choices=null,ok='Готово',placeholder=''}) {
     $('utilityTitle').textContent=title; $('utilityMessage').textContent=message; $('utilityOk').textContent=ok;
     const inputWrap=$('utilityInputWrap'), input=$('utilityInput'), choiceBox=$('utilityChoices'); choiceBox.innerHTML='';
@@ -157,12 +219,14 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
   $('utilityOk').addEventListener('click',()=>{const choices=$('utilityChoices');closeUtility(choices.style.display==='none'?$('utilityInput').value:(choices.dataset.choice==null?null:Number(choices.dataset.choice)));});
   $('utilityModal').addEventListener('click',e=>{if(e.target===$('utilityModal'))closeUtility(null);});
   $('utilityInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('utilityOk').click();if(e.key==='Escape')$('utilityCancel').click();});
+  
   function senderUsername(){try{return String(window.Telegram?.WebApp?.initDataUnsafe?.user?.username||'').replace(/^@/,'');}catch(e){return '';}}
   function offerText(){const user=senderUsername();return `Вам предлагает оффер ${user?'@'+user:'[твой юзернейм]'}\n${offerAmount} ⭐ STARS за подарок\n${offerGiftName||'[подарок]'}\n\nОсталось: 5h 0m`;}
   function syncOfferTemplate(){const isOffer=activeTemplateId==='sayon_offer_nft_v1';$('offerAmountTools').style.display=isOffer?'block':'none';$('postText').readOnly=isOffer;$('postText').setAttribute('aria-readonly',String(isOffer));if(isOffer){$('postText').value=offerText();$('postText').style.opacity='.78';}else{$('postText').style.opacity='1';}renderPreview();}
+  
   $('changeOfferAmount').addEventListener('click',async()=>{const entered=await utilityDialog({title:'Изменить сумму оффера',message:'Введи любую сумму в ⭐ STARS.',value:String(offerAmount),placeholder:'Например, 250'});if(entered===null)return;const amount=String(entered).trim();if(!/^\d+(?:[.,]\d+)?$/.test(amount)||Number(amount)<=0){showToast('Введи корректную сумму больше нуля');return;}offerAmount=amount.replace(',', '.');syncOfferTemplate();showToast('Сумма обновлена');});
   $('changeOfferGift').addEventListener('click',async()=>{const name=await utilityDialog({title:'Изменить подарок',message:'Введи название подарка. В опубликованном тексте квадратные скобки не появятся.',value:offerGiftName==='подарок'?'':offerGiftName,placeholder:'Например, Victory Medal #2729',ok:'Далее'});if(name===null)return;const cleanName=String(name).trim();if(!cleanName){showToast('Введи название подарка');return;}const url=await utilityDialog({title:'Ссылка на подарок',message:'Вставь ссылку, которая должна открываться при нажатии на название подарка. Можно оставить пустой.',value:offerGiftUrl,placeholder:'https://t.me/...',ok:'Сохранить'});if(url===null)return;const cleanUrl=String(url).trim();if(cleanUrl&&!safeUrl(cleanUrl)){showToast('Введи корректную http/https ссылку');return;}offerGiftName=cleanName.replace(/^\[|\]$/g,'');offerGiftUrl=cleanUrl;syncOfferTemplate();showToast('Подарок обновлён');});
-  // Replace browser-native select popups with branded in-page dropdowns.
+  
   const selectBackdrop=document.createElement('div');selectBackdrop.className='custom-select-backdrop';document.body.appendChild(selectBackdrop);
   const customSelects=[];
   function closeCustomSelects(){customSelects.forEach(x=>{x.wrap.classList.remove('open');x.trigger.setAttribute('aria-expanded','false');});selectBackdrop.classList.remove('open');}
@@ -181,9 +245,9 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
   selectBackdrop.addEventListener('click',closeCustomSelects);
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCustomSelects();});
   document.addEventListener('click',e=>{if(!e.target.closest('.custom-select')&&!e.target.closest('.custom-select-backdrop'))closeCustomSelects();});
+  
   try { templates = JSON.parse(localStorage.getItem('poster_templates_v1') || '[]'); if (!Array.isArray(templates)) templates=[]; } catch(e){ templates=[]; }
-  // Keep the original editor intact and add only the requested OFFER NFT template.
-  // Remove the previous batch of automatically inserted Sayon templates, if present.
+  
   templates = templates.filter(t => !String(t.id || '').startsWith('sayon_builtin_'));
   if (!templates.some(t => t.id === 'sayon_offer_nft_v1')) {
     templates.unshift({
@@ -193,7 +257,7 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
       deleteAfterSeconds: 18000
     });
   }
-  // Ensure the built-in OFFER NFT template has the gift deep-link prefix on every button.
+  
   const offerTemplate = templates.find(t => t.id === 'sayon_offer_nft_v1');
   if (offerTemplate) {
     if (!Array.isArray(offerTemplate.buttons) || !offerTemplate.buttons.length) offerTemplate.buttons = [{text:'Отклонить',url:'tg://send_gift?to='},{text:'Принять',url:'tg://send_gift?to='}];
@@ -389,23 +453,15 @@ ${t.deleteAfterSeconds?('Автоудаление: '+escapeHtml(String(t.deleteA
     grid.querySelectorAll('[data-rename]').forEach(el=>el.addEventListener('click',()=>openTemplateModal(el.dataset.rename)));
     grid.querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{templates=templates.filter(t=>t.id!==el.dataset.remove);saveTemplates();showToast('Шаблон удалён');}));
   }
-  // Telegram publishing must go through a trusted backend. Never put a bot token in this HTML.
-  // Set this to your deployed backend URL before publishing the site.
-  // Адрес backend API на MomentHost. Можно задать через окно отправки; токен бота здесь не хранится.
+  
   let API_BASE_URL = (()=>{try{return localStorage.getItem('sayon_api_base_url')||'';}catch(e){return '';}})();
   let sendMode='choose';
-  function getShareText(){
-    // Keep URL-button labels out of the message body: they belong in Telegram inline_keyboard.
-    return payload().text || '';
-  }
+  function getShareText(){ return payload().text || ''; }
   function makeInlineKeyboard(p){
     const valid=(p.buttons||[]).filter(b=>b.text&&b.text.trim()&&safeUrl((b.url||'').trim()));
     const rows=[];
-    if(p.buttonLayout==='stacked'){
-      valid.forEach(b=>rows.push([{text:b.text.trim(),url:b.url.trim()}]));
-    } else {
-      for(let i=0;i<valid.length;i+=2){rows.push(valid.slice(i,i+2).map(b=>({text:b.text.trim(),url:b.url.trim()})));}
-    }
+    if(p.buttonLayout==='stacked'){ valid.forEach(b=>rows.push([{text:b.text.trim(),url:b.url.trim()}])); } 
+    else { for(let i=0;i<valid.length;i+=2){rows.push(valid.slice(i,i+2).map(b=>({text:b.text.trim(),url:b.url.trim()})));} }
     return rows;
   }
   function openSendModal(mode){
@@ -436,7 +492,6 @@ ${t.deleteAfterSeconds?('Автоудаление: '+escapeHtml(String(t.deleteA
     }
     let target;
     if(sendMode==='choose'){
-      // The backend should return chats the bot is allowed to message; HTML cannot read Telegram chats directly.
       try{
         const res=await fetch(API_BASE_URL.replace(/\/$/,'')+'/api/chats',{credentials:'include'});
         if(!res.ok) throw new Error('Не удалось загрузить чаты');
@@ -455,10 +510,7 @@ ${t.deleteAfterSeconds?('Автоудаление: '+escapeHtml(String(t.deleteA
       target={username};
     }
     const request={
-      target,
-      text:p.text||'',
-      photo:imageData||null,
-      photo_name:imageFileName||null,
+      target, text:p.text||'', photo:imageData||null, photo_name:imageFileName||null,
       reply_markup:{inline_keyboard:makeInlineKeyboard(p)},
       text_links:(p.textLinks||[]).filter(l=>l.text&&l.url),
       button_layout:p.buttonLayout||'side',
