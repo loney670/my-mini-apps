@@ -82,7 +82,6 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
           <div class="hint">У каждой кнопки есть свой текст и ссылка. Можно добавлять несколько рядов; для Telegram указывается URL, начинающийся с https:// или http://.</div>
         </div>
         <button class="btn primary full" id="saveTemplate">Сохранить как шаблон</button>
-        <div class="hint">Важно: HTML-файл собирает пост и хранит шаблоны в этом браузере. Для реальной отправки в Telegram потребуется бот и серверный обработчик — токен нельзя безопасно хранить в HTML.</div>
       </div>
     </div>
     <div class="panel">
@@ -104,33 +103,22 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
   </section>
   <section class="send-panel">
     <h2>Отправка публикации</h2>
-    <div class="send-actions"><button class="btn primary" id="chooseChatBtn" type="button">↗ Выбрать чат</button><button class="btn" id="sendByUsernameBtn" type="button">@ По юзернейму</button></div>
+    <div class="send-actions" style="grid-template-columns: 1fr;">
+        <button class="btn primary" id="sendToBotBtn" type="button" style="padding: 15px; font-size: 15px;">🚀 Опубликовать в Telegram</button>
+    </div>
+    <div class="hint" style="margin-top:10px; text-align:center;">Пост будет отправлен в этот чат через бота.</div>
   </section>
-  <footer>SayonNft · конструктор публикаций<br>Не вводи токен Telegram-бота, коды входа или данные сессии в эту страницу.</footer>
+  <footer>SayonNft · конструктор публикаций</footer>
 </div>
 <div class="toast" id="toast"></div>
-<div class="modal-backdrop" id="sendModal"><div class="modal">
-  <h2 id="sendModalTitle">Отправить в Telegram</h2>
-  <div class="send-target" id="usernameTarget"><div class="field"><label for="targetUsername">Юзернейм получателя</label><input type="text" id="targetUsername" placeholder="например, username или @username" autocomplete="off"></div></div>
-  <div class="send-modal-note" id="sendModalNote">Откроется официальный экран Telegram для выбора чата. Браузер не может прочитать список ваших чатов.</div>
-  <div class="modal-actions"><button class="btn" id="cancelSendModal" type="button">Отмена</button><button class="btn primary" id="continueSend" type="button">Отправить</button></div>
-</div></div>
-<div class="modal-backdrop" id="textLinkModal"><div class="modal"><h2>Добавить ссылку к тексту</h2><div class="field"><label>Выделенный текст</label><input type="text" id="linkPhrase" readonly></div><div class="field"><label for="linkUrl">Ссылка (URL)</label><input type="url" id="linkUrl" placeholder="https://example.com"></div><div class="hint">В предпросмотре выбранная фраза станет кликабельной. Для реальной отправки форматирование ссылки нужно передать в Telegram как entities.</div><div class="modal-actions"><button class="btn" id="cancelTextLink">Отмена</button><button class="btn primary" id="applyTextLink">Добавить ссылку</button></div></div></div>
-<div class="modal-backdrop" id="templateModal">
-  <div class="modal">
-    <h2 id="modalTitle">Сохранить шаблон</h2>
-    <div class="field"><label for="templateName">Название шаблона</label><input type="text" id="templateName" placeholder="Например, Розыгрыш"></div>
-    <div class="hint">Сохранится текст, изображение и все кнопки с URL.</div>
-    <div class="modal-actions"><button class="btn" id="cancelModal">Отмена</button><button class="btn primary" id="confirmTemplate">Сохранить</button></div>
-  </div>
-</div>
 
+<!-- Модалки оставляем для шаблонов и ссылок -->
+<div class="modal-backdrop" id="textLinkModal"><div class="modal"><h2>Добавить ссылку к тексту</h2><div class="field"><label>Выделенный текст</label><input type="text" id="linkPhrase" readonly></div><div class="field"><label for="linkUrl">Ссылка (URL)</label><input type="url" id="linkUrl" placeholder="https://example.com"></div><div class="modal-actions"><button class="btn" id="cancelTextLink">Отмена</button><button class="btn primary" id="applyTextLink">Добавить ссылку</button></div></div></div>
+<div class="modal-backdrop" id="templateModal"><div class="modal"><h2 id="modalTitle">Сохранить шаблон</h2><div class="field"><label for="templateName">Название шаблона</label><input type="text" id="templateName" placeholder="Например, Розыгрыш"></div><div class="modal-actions"><button class="btn" id="cancelModal">Отмена</button><button class="btn primary" id="confirmTemplate">Сохранить</button></div></div></div>
 <div class="modal-backdrop" id="utilityModal"><div class="modal"><h2 id="utilityTitle">Введите значение</h2><div id="utilityMessage" class="send-modal-note"></div><div class="field" id="utilityInputWrap"><input type="text" id="utilityInput" autocomplete="off"></div><div id="utilityChoices" class="button-list"></div><div class="modal-actions"><button class="btn" id="utilityCancel" type="button">Отмена</button><button class="btn primary" id="utilityOk" type="button">Готово</button></div></div></div>
+
 <script>
 (() => {
-  // ============================================================
-  // SUPABASE ПОДКЛЮЧЕНИЕ
-  // ============================================================
   const supabaseUrl = 'https://idyqutqkqixkbxtzlweg.supabase.co';
   const supabaseKey = 'sb_publishable_prrQdebQvjKKTLgHGnb00A_nXCOXy1w'; 
   const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -139,54 +127,21 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
     const tg = window.Telegram?.WebApp;
     const userId = tg?.initDataUnsafe?.user?.id;
     const statusEl = document.getElementById('userStatus');
-
-    if (!userId) {
-      if (statusEl) statusEl.textContent = 'Гость';
-      return;
-    }
-
+    if (!userId) { if (statusEl) statusEl.textContent = 'Гость'; return; }
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('subscribed, sub_until')
-        .eq('user_id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error("Ошибка Supabase:", error);
-        if (statusEl) statusEl.textContent = 'Ошибка БД';
-        return;
-      }
-
+      const { data, error } = await supabase.from('users').select('subscribed').eq('user_id', userId).single();
       if (data && data.subscribed) {
-        if (statusEl) {
-          statusEl.innerHTML = 'PRO ✅';
-          statusEl.style.color = '#4ade80';
-          statusEl.style.borderColor = '#166534';
-        }
+        if (statusEl) { statusEl.innerHTML = 'PRO ✅'; statusEl.style.color = '#4ade80'; statusEl.style.borderColor = '#166534'; }
       } else {
-        if (statusEl) {
-          statusEl.textContent = 'FREE';
-          statusEl.style.color = '#a0a0a7';
-        }
+        if (statusEl) { statusEl.textContent = 'FREE'; statusEl.style.color = '#a0a0a7'; }
       }
-    } catch (e) {
-      console.error("Ошибка запроса:", e);
-      if (statusEl) statusEl.textContent = 'Ошибка';
-    }
+    } catch (e) { if (statusEl) statusEl.textContent = 'Ошибка'; }
   }
-
   window.addEventListener('load', () => {
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
-    }
+    if (window.Telegram?.WebApp) { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); }
     checkUserSubscription();
   });
 
-  // ============================================================
-  // ТВОЙ КОД КОНСТРУКТОРА
-  // ============================================================
   const $ = id => document.getElementById(id);
   const MAX_BUTTONS = 100;
   let buttons = [];
@@ -222,11 +177,12 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
   
   function senderUsername(){try{return String(window.Telegram?.WebApp?.initDataUnsafe?.user?.username||'').replace(/^@/,'');}catch(e){return '';}}
   function offerText(){const user=senderUsername();return `Вам предлагает оффер ${user?'@'+user:'[твой юзернейм]'}\n${offerAmount} ⭐ STARS за подарок\n${offerGiftName||'[подарок]'}\n\nОсталось: 5h 0m`;}
-  function syncOfferTemplate(){const isOffer=activeTemplateId==='sayon_offer_nft_v1';$('offerAmountTools').style.display=isOffer?'block':'none';$('postText').readOnly=isOffer;$('postText').setAttribute('aria-readonly',String(isOffer));if(isOffer){$('postText').value=offerText();$('postText').style.opacity='.78';}else{$('postText').style.opacity='1';}renderPreview();}
+  function syncOfferTemplate(){const isOffer=activeTemplateId==='sayon_offer_nft_v1';$('offerAmountTools').style.display=isOffer?'block':'none';$('postText').readOnly=isOffer;if(isOffer){$('postText').value=offerText();$('postText').style.opacity='.78';}else{$('postText').style.opacity='1';}renderPreview();}
   
   $('changeOfferAmount').addEventListener('click',async()=>{const entered=await utilityDialog({title:'Изменить сумму оффера',message:'Введи любую сумму в ⭐ STARS.',value:String(offerAmount),placeholder:'Например, 250'});if(entered===null)return;const amount=String(entered).trim();if(!/^\d+(?:[.,]\d+)?$/.test(amount)||Number(amount)<=0){showToast('Введи корректную сумму больше нуля');return;}offerAmount=amount.replace(',', '.');syncOfferTemplate();showToast('Сумма обновлена');});
-  $('changeOfferGift').addEventListener('click',async()=>{const name=await utilityDialog({title:'Изменить подарок',message:'Введи название подарка. В опубликованном тексте квадратные скобки не появятся.',value:offerGiftName==='подарок'?'':offerGiftName,placeholder:'Например, Victory Medal #2729',ok:'Далее'});if(name===null)return;const cleanName=String(name).trim();if(!cleanName){showToast('Введи название подарка');return;}const url=await utilityDialog({title:'Ссылка на подарок',message:'Вставь ссылку, которая должна открываться при нажатии на название подарка. Можно оставить пустой.',value:offerGiftUrl,placeholder:'https://t.me/...',ok:'Сохранить'});if(url===null)return;const cleanUrl=String(url).trim();if(cleanUrl&&!safeUrl(cleanUrl)){showToast('Введи корректную http/https ссылку');return;}offerGiftName=cleanName.replace(/^\[|\]$/g,'');offerGiftUrl=cleanUrl;syncOfferTemplate();showToast('Подарок обновлён');});
+  $('changeOfferGift').addEventListener('click',async()=>{const name=await utilityDialog({title:'Изменить подарок',message:'Введи название подарка.',value:offerGiftName==='подарок'?'':offerGiftName,placeholder:'Например, Victory Medal #2729',ok:'Далее'});if(name===null)return;const cleanName=String(name).trim();if(!cleanName){showToast('Введи название подарка');return;}const url=await utilityDialog({title:'Ссылка на подарок',message:'Вставь ссылку (можно оставить пустой).',value:offerGiftUrl,placeholder:'https://t.me/...',ok:'Сохранить'});if(url===null)return;const cleanUrl=String(url).trim();offerGiftName=cleanName.replace(/^\[|\]$/g,'');offerGiftUrl=cleanUrl;syncOfferTemplate();showToast('Подарок обновлён');});
   
+  // Custom Select logic
   const selectBackdrop=document.createElement('div');selectBackdrop.className='custom-select-backdrop';document.body.appendChild(selectBackdrop);
   const customSelects=[];
   function closeCustomSelects(){customSelects.forEach(x=>{x.wrap.classList.remove('open');x.trigger.setAttribute('aria-expanded','false');});selectBackdrop.classList.remove('open');}
@@ -234,302 +190,132 @@ footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-heigh
     const wrap=document.createElement('div');wrap.className='custom-select';
     const trigger=document.createElement('button');trigger.type='button';trigger.className='custom-select-trigger';trigger.setAttribute('aria-haspopup','listbox');trigger.setAttribute('aria-expanded','false');
     const label=document.createElement('span');label.className='custom-select-label';
-    const chevron=document.createElement('span');chevron.className='custom-select-chevron';chevron.textContent='⌄';chevron.setAttribute('aria-hidden','true');trigger.append(label,chevron);
-    const menu=document.createElement('div');menu.className='custom-select-menu';menu.setAttribute('role','listbox');
-    Array.from(select.options).forEach((option,i)=>{const item=document.createElement('button');item.type='button';item.className='custom-select-option';item.setAttribute('role','option');item.dataset.value=option.value;item.innerHTML='<span class="custom-select-option-label"></span><span class="custom-select-check" aria-hidden="true"></span>';item.querySelector('.custom-select-option-label').textContent=option.textContent;item.addEventListener('click',()=>{select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));sync();closeCustomSelects();});menu.appendChild(item);});
+    const chevron=document.createElement('span');chevron.className='custom-select-chevron';chevron.textContent='⌄';trigger.append(label,chevron);
+    const menu=document.createElement('div');menu.className='custom-select-menu';
+    Array.from(select.options).forEach((option,i)=>{const item=document.createElement('button');item.type='button';item.className='custom-select-option';item.dataset.value=option.value;item.innerHTML='<span class="custom-select-option-label"></span><span class="custom-select-check"></span>';item.querySelector('.custom-select-option-label').textContent=option.textContent;item.addEventListener('click',()=>{select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));sync();closeCustomSelects();});menu.appendChild(item);});
     select.classList.add('custom-select-native');select.parentNode.insertBefore(wrap,select);wrap.append(trigger,menu);wrap.appendChild(select);
-    function sync(){label.textContent=select.options[select.selectedIndex]?.textContent||'Выбрать';menu.querySelectorAll('.custom-select-option').forEach(item=>{const chosen=item.dataset.value===select.value;item.setAttribute('aria-selected',String(chosen));item.tabIndex=chosen?0:-1;});}
+    function sync(){label.textContent=select.options[select.selectedIndex]?.textContent||'Выбрать';menu.querySelectorAll('.custom-select-option').forEach(item=>{item.setAttribute('aria-selected',String(item.dataset.value===select.value));});}
     trigger.addEventListener('click',()=>{const wasOpen=wrap.classList.contains('open');closeCustomSelects();if(!wasOpen){wrap.classList.add('open');trigger.setAttribute('aria-expanded','true');selectBackdrop.classList.add('open');}});
     select.addEventListener('change',sync);customSelects.push({wrap,trigger,sync});sync();
   });
   selectBackdrop.addEventListener('click',closeCustomSelects);
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCustomSelects();});
   document.addEventListener('click',e=>{if(!e.target.closest('.custom-select')&&!e.target.closest('.custom-select-backdrop'))closeCustomSelects();});
   
   try { templates = JSON.parse(localStorage.getItem('poster_templates_v1') || '[]'); if (!Array.isArray(templates)) templates=[]; } catch(e){ templates=[]; }
   
-  templates = templates.filter(t => !String(t.id || '').startsWith('sayon_builtin_'));
   if (!templates.some(t => t.id === 'sayon_offer_nft_v1')) {
     templates.unshift({
-      id: 'sayon_offer_nft_v1', name: 'OFFER NFT', text: 'Вам предлагает оффер [твой юзернейм]\n[сумма] ⭐ STARS за подарок\n[подарок]\n\nОсталось: 5h 0m', image: null, imageName: null,
+      id: 'sayon_offer_nft_v1', name: 'OFFER NFT', text: '', image: null, imageName: null,
       buttons: [{text: 'Отклонить', url: 'tg://send_gift?to='}, {text: 'Принять', url: 'tg://send_gift?to='}],
-      textLinks: [], publishAs: 'bot', buttonLayout: 'side', countdownInPost: true,
-      deleteAfterSeconds: 18000
+      textLinks: [], publishAs: 'bot', buttonLayout: 'side', countdownInPost: true, deleteAfterSeconds: 18000
     });
-  }
-  
-  const offerTemplate = templates.find(t => t.id === 'sayon_offer_nft_v1');
-  if (offerTemplate) {
-    if (!Array.isArray(offerTemplate.buttons) || !offerTemplate.buttons.length) offerTemplate.buttons = [{text:'Отклонить',url:'tg://send_gift?to='},{text:'Принять',url:'tg://send_gift?to='}];
-    offerTemplate.buttons = offerTemplate.buttons.map(b => ({...b, url: String(b.url || '').startsWith('tg://send_gift?to=') ? b.url : (b.url ? b.url : 'tg://send_gift?to=')}));
   }
   try { localStorage.setItem('poster_templates_v1', JSON.stringify(templates)); } catch(e) {}
 
-  function showToast(message) {
-    const t=$('toast'); t.textContent=message; t.classList.add('show');
-    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2300);
-  }
-  function escapeHtml(s) {
-    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-  function safeUrl(url) {
-    const raw=String(url||'').trim();
-    if (/^tg:\/\/send_gift\?to=[A-Za-z0-9_]*$/i.test(raw)) return raw;
-    try { const u=new URL(raw); return ['https:','http:'].includes(u.protocol) ? u.href : ''; } catch(e){ return ''; }
-  }
-  function normalizeGiftUsername(value) {
-    return String(value||'').trim().replace(/^@+/, '').replace(/\s+/g, '').replace(/[^A-Za-z0-9_]/g, '');
-  }
+  function showToast(message) { const t=$('toast'); t.textContent=message; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2300); }
+  function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function safeUrl(url) { const raw=String(url||'').trim(); if (/^tg:\/\/send_gift\?to=[A-Za-z0-9_]*$/i.test(raw)) return raw; try { const u=new URL(raw); return ['https:','http:'].includes(u.protocol) ? u.href : ''; } catch(e){ return ''; } }
+  
   function payload() {
-    return {text:(activeTemplateId==='sayon_offer_nft_v1'?offerText():$('postText').value), image:imageData || null, imageName:imageFileName || null,
-      buttons:buttons.map(b=>({text:b.text.trim(),url:b.url.trim()})).filter(b=>b.text), textLinks:[...textLinks.map(l=>({text:l.text,url:l.url})), ...(activeTemplateId==='sayon_offer_nft_v1'&&offerGiftUrl?[{text:offerGiftName,url:offerGiftUrl}]:[])],
-      publishAs:$('publishAs').value, buttonLayout, countdownInPost:true, deleteAfterSeconds:Math.max(0,Number($('deleteAfter').value||0))*Number($('deleteUnit').value),
-      createdAt:new Date().toISOString()};
+    return {text:(activeTemplateId==='sayon_offer_nft_v1'?offerText():$('postText').value), buttons:buttons.map(b=>({text:b.text.trim(),url:b.url.trim()})).filter(b=>b.text)};
   }
-  function saveTemplates() {
-    try { localStorage.setItem('poster_templates_v1',JSON.stringify(templates)); }
-    catch(e){ showToast('Не удалось сохранить: возможно, изображение слишком большое'); }
-    renderTemplates();
-  }
+  function saveTemplates() { try { localStorage.setItem('poster_templates_v1',JSON.stringify(templates)); } catch(e){ showToast('Не удалось сохранить: изображение слишком большое'); } renderTemplates(); }
+  
   function renderButtons() {
     const list=$('buttonList'); list.innerHTML='';
     buttons.forEach((b,i)=>{
       const item=document.createElement('div'); item.className='button-item';
       item.innerHTML=`<div class="button-item-top"><span class="button-title">Кнопка ${i+1}</span><div class="button-actions"><button type="button" data-up="${i}" ${i===0?'disabled style="opacity:.35"':''}>↑</button><button type="button" data-down="${i}" ${i===buttons.length-1?'disabled style="opacity:.35"':''}>↓</button><button type="button" data-delete="${i}" title="Удалить">✕</button></div></div>
-        <div class="button-fields"><div class="field"><label>Текст кнопки</label><input type="text" maxlength="64" data-text="${i}" placeholder="Например, Принять" value="${escapeHtml(b.text)}"></div>
-        <div class="field"><label>Ссылка (URL)</label><input type="text" data-url="${i}" placeholder="tg://send_gift?to=" value="${escapeHtml(b.url)}"></div>
-        ${activeTemplateId==='sayon_offer_nft_v1'?`<button type="button" class="btn small" data-add-username="${i}" style="margin-top:8px">＋ Добавить юзернейм</button><div class="hint">Шаблон ссылки: tg://send_gift?to=ЮЗЕРНЕЙМ — без пробелов.</div>`:''}</div>`;
+        <div class="button-fields"><div class="field"><label>Текст</label><input type="text" maxlength="64" data-text="${i}" placeholder="Например, Принять" value="${escapeHtml(b.text)}"></div>
+        <div class="field"><label>Ссылка (URL)</label><input type="text" data-url="${i}" placeholder="tg://send_gift?to=" value="${escapeHtml(b.url)}"></div></div>`;
       list.appendChild(item);
     });
     $('buttonCount').textContent=buttons.length+' / '+MAX_BUTTONS+' кнопок';
     $('addButton').disabled=buttons.length>=MAX_BUTTONS;
-    $('addButton').style.opacity=buttons.length>=MAX_BUTTONS?'.45':'1';
     list.querySelectorAll('[data-text]').forEach(el=>el.addEventListener('input',e=>{buttons[+e.target.dataset.text].text=e.target.value;renderPreview();}));
     list.querySelectorAll('[data-url]').forEach(el=>el.addEventListener('input',e=>{buttons[+e.target.dataset.url].url=e.target.value;renderPreview();}));
-    list.querySelectorAll('[data-add-username]').forEach(el=>el.addEventListener('click',async()=>{
-      const i=+el.dataset.addUsername;
-      const entered=await utilityDialog({title:'Добавить юзернейм',message:'Введи Telegram-юзернейм (можно с @).',placeholder:'@username'});
-      if(entered===null)return;
-      const username=normalizeGiftUsername(entered);
-      if(!username){showToast('Введи корректный юзернейм без пробелов');return;}
-      buttons[i].url='tg://send_gift?to='+username;
-      renderButtons();showToast('Юзернейм добавлен в ссылку кнопки');
-    }));
     list.querySelectorAll('[data-delete]').forEach(el=>el.addEventListener('click',()=>{buttons.splice(+el.dataset.delete,1);renderButtons();renderPreview();}));
     list.querySelectorAll('[data-up]').forEach(el=>el.addEventListener('click',()=>{const i=+el.dataset.up;if(i>0){[buttons[i-1],buttons[i]]=[buttons[i],buttons[i-1]];renderButtons();renderPreview();}}));
     list.querySelectorAll('[data-down]').forEach(el=>el.addEventListener('click',()=>{const i=+el.dataset.down;if(i<buttons.length-1){[buttons[i+1],buttons[i]]=[buttons[i],buttons[i+1]];renderButtons();renderPreview();}}));
     renderPreview();
   }
-  function renderLinkedText(text) {
-    const links=textLinks.filter(l=>l.text && safeUrl(l.url)).slice().sort((a,b)=>b.text.length-a.text.length);
-    let html='', pos=0;
-    while(pos<text.length){
-      let best=null, bestAt=-1;
-      for(const link of links){const at=text.indexOf(link.text,pos);if(at>=0&&(bestAt<0||at<bestAt||(at===bestAt&&link.text.length>best.text.length))){best=link;bestAt=at;}}
-      if(!best){html+=escapeHtml(text.slice(pos));break;}
-      html+=escapeHtml(text.slice(pos,bestAt));
-      html+='<a href="'+escapeHtml(safeUrl(best.url))+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(best.text)+'</a>';
-      pos=bestAt+best.text.length;
-    }
-    return html;
-  }
-  function renderTextLinkList(){
-    const box=$('textLinkList');
-    if(!textLinks.length){box.textContent='Выдели слово или фразу в тексте, нажми «Ссылка на выделенный текст» и введи URL.';return;}
-    box.innerHTML='Ссылки в тексте: '+textLinks.map((l,i)=>'<span style="display:inline-block;margin:3px 6px 3px 0;padding:5px 8px;border:1px solid #444;border-radius:8px">'+escapeHtml(l.text)+' <button type="button" data-remove-text-link="'+i+'" style="background:none;border:0;color:#ffaaaa">×</button></span>').join('');
-    box.querySelectorAll('[data-remove-text-link]').forEach(b=>b.addEventListener('click',()=>{textLinks.splice(+b.dataset.removeTextLink,1);renderPreview();}));
-  }
   function renderPreview() {
     const text=$('postText').value;
     $('previewText').classList.toggle('preview-empty',!text);
     if(!text) $('previewText').innerHTML='<span class="preview-empty">Текст поста появится здесь…</span>';
-    else $('previewText').innerHTML=renderLinkedText(text);
-    renderTextLinkList();
-    const img=$('previewImage');
-    if(imageData){img.src=imageData;img.style.display='block';}else{img.removeAttribute('src');img.style.display='none';}
+    else $('previewText').innerHTML=escapeHtml(text).replace(/\n/g, '<br>'); // Упрощенный рендер текста для примера
     const keyboard=$('previewKeyboard'); keyboard.innerHTML='';
     keyboard.classList.toggle('stacked',buttonLayout==='stacked');
     const visible=buttons.filter(b=>b.text.trim());
     visible.forEach((b,i)=>{
-      const key=document.createElement('div');key.className='preview-key'+(visible.length%2===1&&i===visible.length-1?' span2':'')+(!safeUrl(b.url.trim())?' invalid':'');key.textContent=b.text;key.title=safeUrl(b.url.trim())?b.url:'Добавь корректную ссылку';keyboard.appendChild(key);
+      const key=document.createElement('div');key.className='preview-key'+(visible.length%2===1&&i===visible.length-1?' span2':'')+(!safeUrl(b.url.trim())?' invalid':'');key.textContent=b.text;keyboard.appendChild(key);
     });
     $('buttonCount').textContent=buttons.length+' / '+MAX_BUTTONS+' кнопок';
   }
-  function formatRemaining(ms) {
-    const total=Math.max(0,Math.ceil(ms/1000));
-    const d=Math.floor(total/86400), h=Math.floor((total%86400)/3600), m=Math.floor((total%3600)/60), sec=total%60;
-    const totalMinutes=Math.ceil(total/60); const days=Math.floor(totalMinutes/1440), hours=Math.floor((totalMinutes%1440)/60), minutes=totalMinutes%60; return (days?days+'д ':'')+[hours,minutes].map(n=>String(n).padStart(2,'0')).join(':');
-  }
-  function updateCountdown() {
-    if(!countdownEnd) return;
-    const remaining=countdownEnd-Date.now();
-    $('inlineCountdownValue').textContent=formatRemaining(remaining);
-    $('previewInlineCountdown').style.display='block';
-    if(remaining<=0){clearInterval(countdownInterval);countdownInterval=null;countdownEnd=null;$('inlineCountdownValue').textContent='00:00';showToast('Таймер завершён. Для удаления опубликованного поста нужен сервер.');}
-  }
-  $('startCountdown').addEventListener('click',()=>{
-    const amount=Number($('deleteAfter').value);
-    if(!Number.isFinite(amount)||amount<=0){showToast('Укажи время больше нуля');return;}
-    if(countdownInterval)clearInterval(countdownInterval);
-    countdownEnd=Date.now()+amount*Number($('deleteUnit').value)*1000;
-    $('previewInlineCountdown').style.display='block';updateCountdown();countdownInterval=setInterval(updateCountdown,1000);showToast('Таймер отображается прямо в посте предпросмотра');
-  });
-  $('resetCountdown').addEventListener('click',()=>{if(countdownInterval)clearInterval(countdownInterval);countdownInterval=null;countdownEnd=null;$('previewInlineCountdown').style.display='none';showToast('Таймер сброшен');});
-  $('publishAs').addEventListener('change',()=>{
-    const mode=$('publishAs').value;
-    $('publishModeNote').textContent=mode==='channel'?'Для публикации в канале добавь бота в администраторы и выдай право публикации. Пост будет от имени канала.':mode==='business'?'Подключение настраивается в Telegram: Настройки → Telegram Business → Чат-боты → выбрать бота и выдать разрешения. Бот сможет действовать от имени бизнес-аккаунта в разрешённых личных чатах; это не превращает его в личный аккаунт для произвольной публикации в каналы. Нужен сервер, обрабатывающий business_connection и отправляющий сообщения через Bot API.':'При отправке через Bot API публикацию создаёт бот. Для настоящей отправки, обратного отсчёта в сообщении и автоудаления нужен сервер.';
-  });
-  function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
-    $('editorView').style.display=tab==='editor'?'grid':'none';
-    $('templatesView').style.display=tab==='templates'?'block':'none';
-    if(tab==='templates') renderTemplates();
-  }
-  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+  
+  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('editorView').style.display=b.dataset.tab==='editor'?'grid':'none';$('templatesView').style.display=b.dataset.tab==='templates'?'block':'none';if(b.dataset.tab==='templates')renderTemplates();}));
   document.querySelectorAll('[data-layout]').forEach(b=>b.addEventListener('click',()=>{buttonLayout=b.dataset.layout;document.querySelectorAll('[data-layout]').forEach(x=>x.classList.toggle('active',x===b));renderPreview();}));
-  $('addButton').addEventListener('click',()=>{
-    if(buttons.length>=MAX_BUTTONS){showToast('Достигнут лимит конструктора');return;}
-    buttons.push({text:'Новая кнопка',url:activeTemplateId==='sayon_offer_nft_v1'?'tg://send_gift?to=':'https://'});renderButtons();
-    const fields=$('buttonList').querySelectorAll('input'); if(fields.length) fields[fields.length-2].focus();
-  });
+  $('addButton').addEventListener('click',()=>{buttons.push({text:'Новая кнопка',url:'https://'});renderButtons();});
   $('postText').addEventListener('input',()=>{if(activeTemplateId==='sayon_offer_nft_v1'){$('postText').value=offerText();return;}renderPreview();});
-  $('addTextLink').addEventListener('click',()=>{
-    const area=$('postText'), start=area.selectionStart, end=area.selectionEnd;
-    if(start===end){showToast('Сначала выдели слово или фразу в тексте');return;}
-    pendingTextSelection=area.value.slice(start,end);
-    $('linkPhrase').value=pendingTextSelection;$('linkUrl').value='';$('textLinkModal').classList.add('open');setTimeout(()=>$('linkUrl').focus(),40);
-  });
-  $('cancelTextLink').addEventListener('click',()=>$('textLinkModal').classList.remove('open'));
-  $('textLinkModal').addEventListener('click',e=>{if(e.target===$('textLinkModal'))$('textLinkModal').classList.remove('open');});
-  $('applyTextLink').addEventListener('click',()=>{
-    const url=safeUrl($('linkUrl').value.trim());
-    if(!pendingTextSelection){showToast('Выделенный текст не найден');return;}
-    if(!url){showToast('Введи корректную ссылку http:// или https://');return;}
-    textLinks.push({text:pendingTextSelection,url});$('textLinkModal').classList.remove('open');renderPreview();showToast('Ссылка добавлена к тексту');
-  });
-  $('clearTextLinks').addEventListener('click',()=>{textLinks=[];renderPreview();showToast('Текстовые ссылки удалены');});
-  $('imageInput').addEventListener('change',e=>{
-    const file=e.target.files&&e.target.files[0];if(!file)return;
-    if(!file.type.startsWith('image/')){showToast('Выбери файл изображения');return;}
-    if(file.size>8*1024*1024){showToast('Для стабильного хранения выбери изображение до 8 МБ');e.target.value='';return;}
-    const reader=new FileReader();reader.onload=()=>{imageData=String(reader.result);imageFileName=file.name;$('uploadTitle').textContent=file.name;$('uploadHint').textContent='Изображение загружено';$('imageTools').style.display='flex';renderPreview();};reader.readAsDataURL(file);
-  });
-  $('removeImage').addEventListener('click',()=>{imageData='';imageFileName='';$('imageInput').value='';$('uploadTitle').textContent='Загрузить изображение';$('uploadHint').textContent='PNG, JPG, WEBP · выбери файл на устройстве';$('imageTools').style.display='none';renderPreview();});
-  function openTemplateModal(id=null) {
-    pendingTemplateId=id;
-    const existing=id?templates.find(t=>t.id===id):null;
-    $('modalTitle').textContent=existing?'Переименовать шаблон':'Сохранить шаблон';
-    $('templateName').value=existing?existing.name:'';
-    $('templateModal').classList.add('open');setTimeout(()=>$('templateName').focus(),50);
-  }
+  
+  function openTemplateModal(id=null) { pendingTemplateId=id; const existing=id?templates.find(t=>t.id===id):null; $('modalTitle').textContent=existing?'Переименовать':'Сохранить шаблон'; $('templateName').value=existing?existing.name:''; $('templateModal').classList.add('open'); setTimeout(()=>$('templateName').focus(),50); }
   function closeModal(){$('templateModal').classList.remove('open');pendingTemplateId=null;}
   $('saveTemplate').addEventListener('click',()=>openTemplateModal());
-  $('newTemplate').addEventListener('click',()=>{const wasOffer=activeTemplateId==='sayon_offer_nft_v1';activeTemplateId='';offerGiftName='подарок';offerGiftUrl='';offerAmount=100;$('postText').readOnly=false;$('postText').setAttribute('aria-readonly','false');$('postText').style.opacity='1';$('offerAmountTools').style.display='none';if(wasOffer)$('postText').value='';switchTab('editor');renderPreview();openTemplateModal();});
   $('cancelModal').addEventListener('click',closeModal);
-  $('templateModal').addEventListener('click',e=>{if(e.target===$('templateModal'))closeModal();});
   $('confirmTemplate').addEventListener('click',()=>{
-    const name=$('templateName').value.trim();if(!name){showToast('Введи название шаблона');$('templateName').focus();return;}
+    const name=$('templateName').value.trim(); if(!name){showToast('Введи название');return;}
     if(pendingTemplateId){const t=templates.find(t=>t.id===pendingTemplateId);if(t)t.name=name;}
-    else {const p=payload();templates.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),name,text:p.text,image:p.image,imageName:p.imageName,buttons:p.buttons,textLinks:p.textLinks,publishAs:p.publishAs,buttonLayout:p.buttonLayout,countdownInPost:p.countdownInPost,deleteAfterSeconds:p.deleteAfterSeconds});}
+    else {const p=payload();templates.unshift({id:Date.now().toString(36),name,text:p.text,buttons:p.buttons,buttonLayout:buttonLayout});}
     saveTemplates();closeModal();showToast('Шаблон сохранён');
   });
   function renderTemplates(){
-    $('templateCount').textContent=templates.length;
-    const grid=$('templateGrid');grid.innerHTML='';
-    if(!templates.length){grid.innerHTML='<div class="empty">Пока нет сохранённых шаблонов.<br>Нажми «Добавить шаблон», чтобы создать первый.</div>';return;}
+    $('templateCount').textContent=templates.length; const grid=$('templateGrid'); grid.innerHTML='';
+    if(!templates.length){grid.innerHTML='<div class="empty">Нет шаблонов.</div>';return;}
     templates.forEach(t=>{
-      const card=document.createElement('div');card.className='template-card';
-      card.innerHTML=`<h3>${escapeHtml(t.name)}</h3><p>${escapeHtml(t.text||'Без текста')}\n\n${(t.buttons||[]).length} кнопок · ${escapeHtml(t.publishAs==='channel'?'пост в канале':t.publishAs==='business'?'Telegram Business':'от бота')}
-${t.deleteAfterSeconds?('Автоудаление: '+escapeHtml(String(t.deleteAfterSeconds))+' сек.'): 'Без автоудаления'}</p><div class="template-actions"><button class="btn primary small" data-load="${t.id}">Открыть</button><button class="btn small" data-rename="${t.id}">Название</button><button class="btn danger small" data-remove="${t.id}">Удалить</button></div>`;
+      const card=document.createElement('div'); card.className='template-card';
+      card.innerHTML=`<h3>${escapeHtml(t.name)}</h3><p>${escapeHtml(t.text||'Без текста')}</p><div class="template-actions"><button class="btn primary small" data-load="${t.id}">Открыть</button><button class="btn small" data-rename="${t.id}">Название</button><button class="btn danger small" data-remove="${t.id}">Удалить</button></div>`;
       grid.appendChild(card);
     });
     grid.querySelectorAll('[data-load]').forEach(el=>el.addEventListener('click',()=>{
-      const t=templates.find(x=>x.id===el.dataset.load);if(!t)return;
-      activeTemplateId=t.id;
-      offerAmount=100;if(t.id==='sayon_offer_nft_v1'){offerGiftName='подарок';offerGiftUrl='';}$('postText').value=t.id==='sayon_offer_nft_v1'?offerText():(t.text||'');imageData=t.image||'';imageFileName=t.imageName||'';buttons=(t.buttons||[]).map(b=>({text:b.text||'',url:b.url||''}));textLinks=(t.textLinks||[]).map(l=>({text:l.text||'',url:l.url||''}));buttonLayout=t.buttonLayout||'side';document.querySelectorAll('[data-layout]').forEach(x=>x.classList.toggle('active',x.dataset.layout===buttonLayout));$('publishAs').value=t.publishAs||'bot';$('publishAs').dispatchEvent(new Event('change'));const seconds=Number(t.deleteAfterSeconds||0);if(seconds>0){const units=[86400,3600,60,1];const unit=units.find(u=>seconds%u===0)||1;$('deleteUnit').value=String(unit);$('deleteAfter').value=String(seconds/unit);}else{$('deleteAfter').value='60';$('deleteUnit').value='60';}$('deleteUnit').dispatchEvent(new Event('change'));
-      $('uploadTitle').textContent=imageFileName||'Загрузить изображение';$('uploadHint').textContent=imageData?'Изображение загружено':'PNG, JPG, WEBP · выбери файл на устройстве';$('imageTools').style.display=imageData?'flex':'none';
-      $('imageInput').value='';renderButtons();switchTab('editor');syncOfferTemplate();showToast('Шаблон открыт');
+      const t=templates.find(x=>x.id===el.dataset.load); if(!t)return;
+      activeTemplateId=t.id; $('postText').value=t.id==='sayon_offer_nft_v1'?offerText():(t.text||''); buttons=(t.buttons||[]).map(b=>({text:b.text||'',url:b.url||''})); buttonLayout=t.buttonLayout||'side'; document.querySelectorAll('[data-layout]').forEach(x=>x.classList.toggle('active',x.dataset.layout===buttonLayout));
+      renderButtons(); syncOfferTemplate(); document.querySelector('.tab[data-tab="editor"]').click(); showToast('Шаблон открыт');
     }));
     grid.querySelectorAll('[data-rename]').forEach(el=>el.addEventListener('click',()=>openTemplateModal(el.dataset.rename)));
-    grid.querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{templates=templates.filter(t=>t.id!==el.dataset.remove);saveTemplates();showToast('Шаблон удалён');}));
+    grid.querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{templates=templates.filter(t=>t.id!==el.dataset.remove);saveTemplates();}));
   }
-  
-  let API_BASE_URL = (()=>{try{return localStorage.getItem('sayon_api_base_url')||'';}catch(e){return '';}})();
-  let sendMode='choose';
-  function getShareText(){ return payload().text || ''; }
-  function makeInlineKeyboard(p){
-    const valid=(p.buttons||[]).filter(b=>b.text&&b.text.trim()&&safeUrl((b.url||'').trim()));
-    const rows=[];
-    if(p.buttonLayout==='stacked'){ valid.forEach(b=>rows.push([{text:b.text.trim(),url:b.url.trim()}])); } 
-    else { for(let i=0;i<valid.length;i+=2){rows.push(valid.slice(i,i+2).map(b=>({text:b.text.trim(),url:b.url.trim()})));} }
-    return rows;
-  }
-  function openSendModal(mode){
-    sendMode=mode;
-    $('sendModalTitle').textContent=mode==='choose'?'Выбрать чат':'Отправить по юзернейму';
-    $('usernameTarget').classList.toggle('open',mode==='username');
-    $('sendModalNote').textContent=mode==='choose'
-      ?'Для списка чатов и публикации с настоящими Telegram-кнопками нужен подключённый сервер SayonNft.'
-      :'Укажи @username. Отправка возможна только если сервер знает доступный Telegram chat_id получателя.';
-    $('continueSend').textContent='Отправить';
-    $('sendModal').classList.add('open');
-    if(mode==='username') setTimeout(()=>$('targetUsername').focus(),50);
-  }
-  $('chooseChatBtn').addEventListener('click',()=>openSendModal('choose'));
-  $('sendByUsernameBtn').addEventListener('click',()=>openSendModal('username'));
-  $('cancelSendModal').addEventListener('click',()=>$('sendModal').classList.remove('open'));
-  $('sendModal').addEventListener('click',e=>{if(e.target===$('sendModal'))$('sendModal').classList.remove('open');});
-  $('continueSend').addEventListener('click',async()=>{
-    const p=payload();
-    if(!(p.text||'').trim()&&!imageData){showToast('Сначала добавь текст или изображение');return;}
-    if(!API_BASE_URL){
-      const entered=await utilityDialog({title:'Адрес API-сервера',message:'Вставь HTTPS-адрес API сервера на MomentHost (без /api в конце).',value:'https://',placeholder:'https://example.com'});
-      if(entered===null)return;
-      const clean=entered.trim().replace(/\/$/,'');
-      if(!/^https:\/\//i.test(clean)){showToast('Нужен HTTPS-адрес сервера');return;}
-      API_BASE_URL=clean;
-      try{localStorage.setItem('sayon_api_base_url',API_BASE_URL);}catch(e){}
-    }
-    let target;
-    if(sendMode==='choose'){
-      try{
-        const res=await fetch(API_BASE_URL.replace(/\/$/,'')+'/api/chats',{credentials:'include'});
-        if(!res.ok) throw new Error('Не удалось загрузить чаты');
-        const data=await res.json();
-        const chats=Array.isArray(data.chats)?data.chats:[];
-        if(!chats.length){showToast('Сервер не вернул доступных чатов');return;}
-        const picked=await utilityDialog({title:'Выбери чат',message:'Выбери чат для публикации.',choices:chats.map(c=>({label:(c.title||c.username||c.chat_id)})),ok:'Выбрать'});
-        if(picked===null)return;
-        const index=Number(picked);
-        if(!Number.isInteger(index)||index<0||index>=chats.length){showToast('Неверный номер чата');return;}
-        target={chat_id:chats[index].chat_id};
-      }catch(e){showToast('Не удалось получить чаты. Проверь сервер SayonNft');return;}
+
+  // --- ГЛАВНАЯ КНОПКА ОТПРАВКИ ---
+  $('sendToBotBtn').addEventListener('click', () => {
+    const p = payload();
+    if (!(p.text || '').trim()) { showToast('Добавь текст поста'); return; }
+    
+    if (window.Telegram?.WebApp?.sendData) {
+        // Собираем данные для бота
+        const sendData = {
+            text: p.text,
+            buttons: p.buttons
+        };
+        // Отправляем боту
+        window.Telegram.WebApp.sendData(JSON.stringify(sendData));
+        showToast('Отправка...');
+        setTimeout(() => window.Telegram.WebApp.close(), 500);
     } else {
-      const username=$('targetUsername').value.trim().replace(/^@/,'');
-      if(!/^[A-Za-z0-9_]{5,32}$/.test(username)){showToast('Введи корректный Telegram-юзернейм');$('targetUsername').focus();return;}
-      target={username};
+        showToast('Ошибка: отправка доступна только в Telegram');
     }
-    const request={
-      target, text:p.text||'', photo:imageData||null, photo_name:imageFileName||null,
-      reply_markup:{inline_keyboard:makeInlineKeyboard(p)},
-      text_links:(p.textLinks||[]).filter(l=>l.text&&l.url),
-      button_layout:p.buttonLayout||'side',
-      delete_after_seconds:Number(p.deleteAfterSeconds||0),
-      publish_as:p.publishAs||'bot'
-    };
-    const sendButton=$('continueSend');sendButton.disabled=true;sendButton.textContent='Отправка…';
-    try{
-      const res=await fetch(API_BASE_URL.replace(/\/$/,'')+'/api/publish',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(request)});
-      const result=await res.json().catch(()=>({}));
-      if(!res.ok)throw new Error(result.error||'Ошибка отправки');
-      $('sendModal').classList.remove('open');
-      showToast('Пост отправлен в Telegram с inline-кнопками');
-    }catch(e){showToast(e.message||'Не удалось отправить пост');}
-    finally{sendButton.disabled=false;sendButton.textContent='Отправить';}
   });
-  $('targetUsername').addEventListener('keydown',e=>{if(e.key==='Enter')$('continueSend').click();if(e.key==='Escape')$('sendModal').classList.remove('open');});
-  $('templateName').addEventListener('keydown',e=>{if(e.key==='Enter')$('confirmTemplate').click();if(e.key==='Escape')closeModal();});
-  syncOfferTemplate();renderButtons();renderTemplates();
+
+  // Инициализация
+  syncOfferTemplate(); renderButtons(); renderTemplates();
+  if (!templates.some(t => t.id === 'sayon_offer_nft_v1')) {
+      // Принудительно загружаем оффер по умолчанию, если его нет
+      const offerT = templates.find(t => t.id === 'sayon_offer_nft_v1');
+      if (offerT) {
+           activeTemplateId = offerT.id; buttons = offerT.buttons; 
+           $('postText').value = offerText();
+           renderButtons();
+      }
+  }
 })();
 </script>
 </body>
