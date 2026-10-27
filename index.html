@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<title>SayonNft — Конструктор публикаций</title>
+<style>
+:root{--bg:#080808;--panel:#141414;--panel2:#1b1b1b;--line:#373737;--muted:#85858d;--white:#f4f4f5;--accent:#ededed;--radius:24px}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0%,#292929 0,#101010 32%,#080808 72%);color:var(--white);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh}
+button,input,textarea,select{font:inherit}button{cursor:pointer;color:inherit}.app{max-width:1180px;margin:auto;padding:22px 18px 60px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}.brand{display:flex;align-items:center;gap:12px;font-weight:850;letter-spacing:-.8px;font-size:22px}.logo{height:42px;width:42px;border-radius:14px;background:linear-gradient(145deg,#fff,#888);color:#111;display:grid;place-items:center;font-weight:950;font-size:18px;box-shadow:0 0 28px #fff2}.status{border:1px solid #444;border-radius:30px;padding:9px 13px;color:#b8b8bd;font-size:12px;letter-spacing:1.5px;text-transform:uppercase}.status:before{content:"";display:inline-block;width:7px;height:7px;background:#ddd;border-radius:50%;margin-right:8px;box-shadow:0 0 9px #fff8}
+.hero{padding:24px 4px 20px}.eyebrow{font-size:11px;letter-spacing:4px;color:#85858d;text-transform:uppercase;margin-bottom:12px}.hero h1{font-size:clamp(30px,6vw,58px);line-height:1.02;letter-spacing:-2.4px;margin:0 0 12px;font-weight:850}.hero p{color:#a0a0a7;margin:0;max-width:620px;line-height:1.6}
+.tabs{display:flex;gap:8px;overflow:auto;padding:5px 0 18px}.tab{white-space:nowrap;border:1px solid #343434;background:#151515;color:#999;padding:12px 17px;border-radius:15px;font-size:13px;font-weight:700}.tab.active{background:#f2f2f2;color:#111;border-color:#f2f2f2}
+.layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:18px;align-items:start}.panel{background:linear-gradient(145deg,#1b1b1bf2,#101010f5);border:1px solid #424242;border-radius:26px;box-shadow:inset 0 1px #ffffff12,0 18px 60px #0006;overflow:hidden}.panel-head{padding:20px 22px 16px;border-bottom:1px solid #303030;display:flex;justify-content:space-between;align-items:center;gap:10px}.panel-head h2{font-size:16px;margin:0;letter-spacing:-.3px}.panel-body{padding:21px}.field{margin-bottom:19px}.field:last-child{margin-bottom:0}label,.field-label{display:block;color:#aaaab2;font-size:11px;letter-spacing:1.7px;text-transform:uppercase;font-weight:750;margin-bottom:9px}
+input[type=text],input[type=url],textarea,select{width:100%;background:#0b0b0b;border:1px solid #383838;border-radius:13px;color:#f5f5f5;padding:13px 14px;outline:none;transition:.18s}input:focus,textarea:focus,select:focus{border-color:#aaa;box-shadow:0 0 0 3px #fff0}textarea{resize:vertical;min-height:115px;line-height:1.55}input::placeholder,textarea::placeholder{color:#666}
+.upload{display:block;border:1px dashed #555;border-radius:18px;background:#0c0c0c;text-align:center;padding:22px 14px;cursor:pointer;transition:.2s}.upload:hover{border-color:#aaa;background:#151515}.upload strong{display:block;font-size:14px;margin:7px 0}.upload small{color:#888;font-size:12px}.upload-icon{font-size:26px;color:#ddd}.upload input{display:none}.image-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;color:#999;font-size:12px}.image-tools button{background:none;border:0;color:#ddd;text-decoration:underline}
+.btn{border:1px solid #444;background:#242424;border-radius:13px;padding:12px 15px;font-weight:750;font-size:13px;transition:transform .15s,background .15s}.btn:hover{background:#333;transform:translateY(-1px)}.btn.primary{background:#f2f2f2;color:#111;border-color:#f2f2f2}.btn.primary:hover{background:#d8d8d8}.btn.danger{color:#ff9e9e;border-color:#633;background:#211313}.btn.small{padding:8px 10px;font-size:12px;border-radius:10px}.full{width:100%}.row{display:flex;gap:10px}.row>*{min-width:0;flex:1}
+.layout-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:5px;border:1px solid #303030;border-radius:18px;background:#080808}.layout-option{border:1px solid transparent;background:transparent;color:#929299;padding:13px 9px;border-radius:13px;font-weight:750}.layout-option.active{background:#292929;color:#f5f5f5;border-color:#555;box-shadow:inset 0 1px #ffffff15}.button-list{display:flex;flex-direction:column;gap:10px}.button-item{border:1px solid #393939;border-radius:16px;background:#0d0d0d;padding:13px}.button-item-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.button-title{font-size:13px;font-weight:800}.button-actions{display:flex;gap:6px}.button-actions button{font-size:11px;background:#202020;border:1px solid #383838;border-radius:8px;padding:6px 8px}.button-fields{display:grid;grid-template-columns:1fr;gap:10px}.button-fields .field{margin:0}.button-fields label{font-size:10px;margin-bottom:6px}.button-fields input{padding:10px 11px;border-radius:10px;font-size:13px}.hint{color:#818188;font-size:12px;line-height:1.5;margin-top:9px}
+.preview-wrap{padding:22px;background:radial-gradient(ellipse at 50% 0%,#2b2b2b,#111 75%)}.preview-label{display:flex;align-items:center;justify-content:space-between;color:#8c8c94;letter-spacing:2px;font-size:10px;text-transform:uppercase;margin-bottom:14px}.phone-post{border:1px solid #454545;background:#171717;border-radius:23px;overflow:hidden;box-shadow:0 16px 50px #0008}.preview-image{display:none;width:100%;max-height:340px;object-fit:cover}.preview-content{padding:17px 17px 12px}.preview-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:14px;min-height:18px}.preview-text a{color:#8fcaff;text-decoration:underline;text-underline-offset:2px}.link-tool{display:flex;gap:9px;flex-wrap:wrap;margin-top:9px}.preview-empty{color:#777;font-style:italic}.preview-keyboard{padding:0 10px 10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.preview-key{background:#303b47;border:1px solid #3f4b59;border-radius:9px;text-align:center;padding:10px 5px;color:#f3f5f7;font-size:12px;font-weight:650;overflow-wrap:anywhere}.preview-key.span2{grid-column:span 2}.preview-keyboard.stacked{grid-template-columns:minmax(0,1fr)}.preview-keyboard.stacked .preview-key.span2{grid-column:auto}.preview-note{color:#777;font-size:11px;line-height:1.5;margin-top:13px}.countdown{display:none}.inline-countdown{margin-top:10px;padding-top:9px;border-top:1px solid #383838;color:#c9c9cf;font-size:12px}.inline-countdown strong{color:#fff;font-variant-numeric:tabular-nums;letter-spacing:1px}.preview-key.invalid{opacity:.65;border-style:dashed}.mode-note{border:1px solid #3b3b3b;background:#101010;padding:12px 13px;border-radius:13px;color:#9a9aa2;font-size:12px;line-height:1.5;margin-top:10px}
+.template-area{display:none}.template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.template-card{background:#101010;border:1px solid #383838;border-radius:17px;padding:15px}.template-card h3{font-size:14px;margin:0 0 7px;overflow-wrap:anywhere}.template-card p{font-size:12px;color:#999;margin:0 0 13px;line-height:1.45;white-space:pre-wrap;max-height:60px;overflow:hidden}.template-actions{display:flex;gap:7px;flex-wrap:wrap}.empty{border:1px dashed #444;border-radius:16px;padding:25px;text-align:center;color:#85858d;font-size:13px;line-height:1.6;grid-column:1/-1}
+.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#f3f3f3;color:#111;padding:12px 17px;border-radius:13px;font-size:13px;font-weight:750;box-shadow:0 8px 30px #0008;transition:.25s;z-index:5}.toast.show{opacity:1;transform:translate(-50%,0)}
+.custom-select-native{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;left:-9999px!important}.custom-select{position:relative;width:100%}.custom-select-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;background:#0b0b0b;border:1px solid #383838;border-radius:13px;color:#f5f5f5;padding:15px 14px;min-height:54px}.custom-select-trigger:focus{outline:2px solid #777;outline-offset:2px}.custom-select-chevron{color:#999;transition:transform .18s}.custom-select.open .custom-select-chevron{transform:rotate(180deg)}.custom-select-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 7px);z-index:30;background:#202020;border:1px solid #484848;border-radius:17px;overflow:hidden;box-shadow:0 18px 55px #000c;max-height:min(58vh,420px);overflow-y:auto}.custom-select.open .custom-select-menu{display:block;animation:menuIn .14s ease-out}@keyframes menuIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}.custom-select-option{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;background:transparent;color:#eee;border:0;border-bottom:1px solid #393939;padding:17px 15px;line-height:1.35;white-space:normal}.custom-select-option:last-child{border-bottom:0}.custom-select-option:active,.custom-select-option:hover{background:#303030}.custom-select-option[aria-selected=true]{background:#292929}.custom-select-check{flex:0 0 22px;width:22px;height:22px;border:2px solid #777;border-radius:50%;display:grid;place-items:center;color:#c6d1ff;font-size:13px}.custom-select-option[aria-selected=true] .custom-select-check{border-color:#b9c7ff}.custom-select-option[aria-selected=true] .custom-select-check:after{content:'●';font-size:12px}.custom-select-option-label{min-width:0}.custom-select-backdrop{position:fixed;inset:0;z-index:29;display:none;background:#0007}.custom-select-backdrop.open{display:block}@media(max-width:780px){.custom-select-menu{max-height:52vh}.custom-select-option{padding:18px 15px;font-size:16px}}
+.modal-backdrop{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:20px;z-index:4}.modal-backdrop.open{display:flex}.modal{width:min(440px,100%);border:1px solid #444;background:#151515;border-radius:22px;padding:22px;box-shadow:0 30px 90px #000}.modal h2{font-size:19px;margin:0 0 18px}.modal-actions{display:flex;gap:10px;margin-top:18px}.modal-actions button{flex:1}.send-panel{margin-top:18px;border:1px solid #444;border-radius:22px;background:linear-gradient(145deg,#1b1b1b,#101010);padding:20px;box-shadow:inset 0 1px #ffffff10}.send-panel h2{font-size:17px;margin:0 0 8px}.send-panel p{font-size:13px;line-height:1.55;color:#999;margin:0 0 15px}.send-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.send-modal-note{border:1px solid #494949;background:#202020;border-radius:13px;padding:12px;color:#b8b8bf;font-size:12px;line-height:1.5;margin-top:12px}.send-target{display:none}.send-target.open{display:block}@media(max-width:520px){.send-actions{grid-template-columns:1fr}}
+footer{text-align:center;color:#626269;font-size:11px;margin:25px 0 0;line-height:1.6}
+@media(max-width:780px){.app{padding:16px 12px 42px}.layout{grid-template-columns:1fr}.hero{padding-top:14px}.hero h1{letter-spacing:-1.5px}.panel-body{padding:17px}.preview-wrap{padding:16px}.template-grid{grid-template-columns:1fr}.topbar{margin-bottom:12px}.status{font-size:10px;padding:8px}.row.mobile-stack{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo">S</div><span>SayonNft</span></div>
+    <div class="status">Конструктор постов</div>
+  </header>
+  <section class="hero">
+    <div class="eyebrow">Telegram publishing tools</div>
+    <h1>Посты. Кнопки.<br>Всё под контролем.</h1>
+    <p>Собирай публикации с изображениями и inline-кнопками, сохраняй готовые шаблоны и проверяй результат в предпросмотре.</p>
+  </section>
+  <nav class="tabs">
+    <button class="tab active" data-tab="editor">✦ Редактор поста</button>
+    <button class="tab" data-tab="templates">▤ Шаблоны <span id="templateCount">0</span></button>
+  </nav>
+  <section id="editorView" class="layout">
+    <div class="panel">
+      <div class="panel-head"><h2>Создание публикации</h2><span class="eyebrow" style="margin:0">01 / EDIT</span></div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Изображение к посту</label>
+          <label class="upload" for="imageInput"><span class="upload-icon">＋</span><strong id="uploadTitle">Загрузить изображение</strong><small id="uploadHint">PNG, JPG, WEBP · выбери файл на устройстве</small><input id="imageInput" type="file" accept="image/*"></label>
+          <div class="image-tools" id="imageTools" style="display:none"><span id="imageName"></span><button type="button" id="removeImage">Удалить изображение</button></div>
+        </div>
+        <div class="field"><label for="postText">Текст публикации</label><textarea id="postText" placeholder="Напиши текст поста…&#10;&#10;Можно использовать переносы строк и эмодзи."></textarea><div class="link-tool"><button class="btn small" type="button" id="addTextLink">🔗 Ссылка на выделенный текст</button><button class="btn small" type="button" id="clearTextLinks">Убрать текстовые ссылки</button></div><div id="textLinkList" class="hint">Выдели слово или фразу в тексте, нажми «Ссылка на выделенный текст» и введи URL.</div></div>
+        <div class="field">
+          <label for="publishAs">Публиковать от имени</label>
+          <select id="publishAs"><option value="bot">От имени бота</option><option value="channel">От имени канала</option><option value="business">От имени личного аккаунта через Telegram Business</option><option value="account">Личный аккаунт через MTProto (сложная интеграция)</option></select>
+          <div class="mode-note" id="publishModeNote">При отправке через Bot API публикацию создаёт бот. В канале пост может отображаться от имени канала при соответствующих правах.</div>
+        </div>
+        <div class="field">
+          <label>Автоудаление публикации</label>
+          <div class="row">
+            <input id="deleteAfter" type="text" inputmode="numeric" value="60" aria-label="Количество времени до удаления" placeholder="60">
+            <select id="deleteUnit" aria-label="Единица времени"><option value="60">Минут</option><option value="3600">Часов</option><option value="86400">Дней</option></select>
+          </div>
+          <div class="row" style="margin-top:9px"><button class="btn" id="startCountdown" type="button">▶ Запустить таймер</button><button class="btn" id="resetCountdown" type="button">Сбросить таймер</button></div>
+          <div class="hint">Обратный отсчёт будет отображаться прямо в тексте поста. Чтобы обновлять его в опубликованном сообщении и удалить сообщение по окончании времени, нужен постоянно работающий сервер.</div>
+        </div>
+        <div class="field">
+          <label>Расположение кнопок</label>
+          <div class="layout-switch" role="group" aria-label="Расположение кнопок">
+            <button type="button" class="layout-option active" data-layout="side">Рядом</button>
+            <button type="button" class="layout-option" data-layout="stacked">Друг над другом</button>
+          </div>
+          <div class="hint">Выбери, показывать кнопки в два столбца или каждую на отдельной строке.</div>
+        </div>
+        <div class="field">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px"><label style="margin:0">Кнопки под постом</label><span id="buttonCount" class="eyebrow" style="margin:0;letter-spacing:1px">0 кнопок</span></div>
+          <div id="buttonList" class="button-list"></div>
+          <button class="btn full" id="addButton" style="margin-top:12px">＋ Добавить кнопку</button>
+          <div class="hint">У каждой кнопки есть свой текст и ссылка. Можно добавлять несколько рядов; для Telegram указывается URL, начинающийся с https:// или http://.</div>
+        </div>
+        <button class="btn primary full" id="saveTemplate">Сохранить как шаблон</button>
+        <div class="hint">Важно: HTML-файл собирает пост и хранит шаблоны в этом браузере. Для реальной отправки в Telegram потребуется бот и серверный обработчик — токен нельзя безопасно хранить в HTML.</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Предпросмотр поста</h2><span class="eyebrow" style="margin:0">02 / LIVE</span></div>
+      <div class="preview-wrap">
+        <div class="preview-label"><span>Telegram · пример</span><span>● Live preview</span></div>
+        <div class="phone-post">
+          <img id="previewImage" class="preview-image" alt="Изображение поста">
+          <div class="preview-content"><div id="previewText" class="preview-text"><span class="preview-empty">Текст поста появится здесь…</span></div><div id="previewInlineCountdown" class="inline-countdown" style="display:none">⏳ До удаления: <strong id="inlineCountdownValue">—</strong></div></div>
+          <div id="previewKeyboard" class="preview-keyboard"></div>
+        </div>
+        <div class="preview-note">Внешний вид может немного отличаться от Telegram. Кнопки в предпросмотре не открывают ссылки.</div>
+      </div>
+    </div>
+  </section>
+  <section id="templatesView" class="panel template-area">
+    <div class="panel-head"><h2>Мои шаблоны</h2><button class="btn primary small" id="newTemplate">＋ Добавить шаблон</button></div>
+    <div class="panel-body"><div id="templateGrid" class="template-grid"></div><p class="hint">Шаблоны сохраняются локально в этом браузере на этом устройстве.</p></div>
+  </section>
+  <section class="send-panel">
+    <h2>Отправка публикации</h2>
+    <div class="send-actions"><button class="btn primary" id="chooseChatBtn" type="button">↗ Выбрать чат</button><button class="btn" id="sendByUsernameBtn" type="button">@ По юзернейму</button></div>
+  </section>
+  <footer>SayonNft · локальный конструктор публикаций<br>Не вводи токен Telegram-бота, коды входа или данные сессии в эту страницу.</footer>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal-backdrop" id="sendModal"><div class="modal">
+  <h2 id="sendModalTitle">Отправить в Telegram</h2>
+  <div class="send-target" id="usernameTarget"><div class="field"><label for="targetUsername">Юзернейм получателя</label><input type="text" id="targetUsername" placeholder="например, username или @username" autocomplete="off"></div></div>
+  <div class="send-modal-note" id="sendModalNote">Откроется официальный экран Telegram для выбора чата. Браузер не может прочитать список ваших чатов.</div>
+  <div class="modal-actions"><button class="btn" id="cancelSendModal" type="button">Отмена</button><button class="btn primary" id="continueSend" type="button">Продолжить в Telegram</button></div>
+</div></div>
+<div class="modal-backdrop" id="textLinkModal"><div class="modal"><h2>Добавить ссылку к тексту</h2><div class="field"><label>Выделенный текст</label><input type="text" id="linkPhrase" readonly></div><div class="field"><label for="linkUrl">Ссылка (URL)</label><input type="url" id="linkUrl" placeholder="https://example.com"></div><div class="hint">В предпросмотре выбранная фраза станет кликабельной. Для реальной отправки форматирование ссылки нужно передать в Telegram как entities.</div><div class="modal-actions"><button class="btn" id="cancelTextLink">Отмена</button><button class="btn primary" id="applyTextLink">Добавить ссылку</button></div></div></div>
+<div class="modal-backdrop" id="templateModal">
+  <div class="modal">
+    <h2 id="modalTitle">Сохранить шаблон</h2>
+    <div class="field"><label for="templateName">Название шаблона</label><input type="text" id="templateName" placeholder="Например, Розыгрыш"></div>
+    <div class="hint">Сохранится текст, изображение и все кнопки с URL.</div>
+    <div class="modal-actions"><button class="btn" id="cancelModal">Отмена</button><button class="btn primary" id="confirmTemplate">Сохранить</button></div>
+  </div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const MAX_BUTTONS = 100;
+  let buttons = [];
+  let textLinks = [];
+  let pendingTextSelection = '';
+  let buttonLayout = 'side';
+  let imageData = '';
+  let imageFileName = '';
+  let templates = [];
+  let pendingTemplateId = null;
+  let countdownEnd = null;
+  let countdownInterval = null;
+  let toastTimer;
+  // Replace browser-native select popups with branded in-page dropdowns.
+  const selectBackdrop=document.createElement('div');selectBackdrop.className='custom-select-backdrop';document.body.appendChild(selectBackdrop);
+  const customSelects=[];
+  function closeCustomSelects(){customSelects.forEach(x=>{x.wrap.classList.remove('open');x.trigger.setAttribute('aria-expanded','false');});selectBackdrop.classList.remove('open');}
+  document.querySelectorAll('select').forEach((select,index)=>{
+    const wrap=document.createElement('div');wrap.className='custom-select';
+    const trigger=document.createElement('button');trigger.type='button';trigger.className='custom-select-trigger';trigger.setAttribute('aria-haspopup','listbox');trigger.setAttribute('aria-expanded','false');
+    const label=document.createElement('span');label.className='custom-select-label';
+    const chevron=document.createElement('span');chevron.className='custom-select-chevron';chevron.textContent='⌄';chevron.setAttribute('aria-hidden','true');trigger.append(label,chevron);
+    const menu=document.createElement('div');menu.className='custom-select-menu';menu.setAttribute('role','listbox');
+    Array.from(select.options).forEach((option,i)=>{const item=document.createElement('button');item.type='button';item.className='custom-select-option';item.setAttribute('role','option');item.dataset.value=option.value;item.innerHTML='<span class="custom-select-option-label"></span><span class="custom-select-check" aria-hidden="true"></span>';item.querySelector('.custom-select-option-label').textContent=option.textContent;item.addEventListener('click',()=>{select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));sync();closeCustomSelects();});menu.appendChild(item);});
+    select.classList.add('custom-select-native');select.parentNode.insertBefore(wrap,select);wrap.append(trigger,menu);wrap.appendChild(select);
+    function sync(){label.textContent=select.options[select.selectedIndex]?.textContent||'Выбрать';menu.querySelectorAll('.custom-select-option').forEach(item=>{const chosen=item.dataset.value===select.value;item.setAttribute('aria-selected',String(chosen));item.tabIndex=chosen?0:-1;});}
+    trigger.addEventListener('click',()=>{const wasOpen=wrap.classList.contains('open');closeCustomSelects();if(!wasOpen){wrap.classList.add('open');trigger.setAttribute('aria-expanded','true');selectBackdrop.classList.add('open');}});
+    select.addEventListener('change',sync);customSelects.push({wrap,trigger,sync});sync();
+  });
+  selectBackdrop.addEventListener('click',closeCustomSelects);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCustomSelects();});
+  document.addEventListener('click',e=>{if(!e.target.closest('.custom-select')&&!e.target.closest('.custom-select-backdrop'))closeCustomSelects();});
+  try { templates = JSON.parse(localStorage.getItem('poster_templates_v1') || '[]'); if (!Array.isArray(templates)) templates=[]; } catch(e){ templates=[]; }
+
+  function showToast(message) {
+    const t=$('toast'); t.textContent=message; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2300);
+  }
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function safeUrl(url) {
+    try { const u=new URL(url); return ['https:','http:'].includes(u.protocol) ? u.href : ''; } catch(e){ return ''; }
+  }
+  function payload() {
+    return {text:$('postText').value, image:imageData || null, imageName:imageFileName || null,
+      buttons:buttons.map(b=>({text:b.text.trim(),url:b.url.trim()})).filter(b=>b.text), textLinks:textLinks.map(l=>({text:l.text,url:l.url})),
+      publishAs:$('publishAs').value, buttonLayout, countdownInPost:true, deleteAfterSeconds:Math.max(0,Number($('deleteAfter').value||0))*Number($('deleteUnit').value),
+      createdAt:new Date().toISOString()};
+  }
+  function saveTemplates() {
+    try { localStorage.setItem('poster_templates_v1',JSON.stringify(templates)); }
+    catch(e){ showToast('Не удалось сохранить: возможно, изображение слишком большое'); }
+    renderTemplates();
+  }
+  function renderButtons() {
+    const list=$('buttonList'); list.innerHTML='';
+    buttons.forEach((b,i)=>{
+      const item=document.createElement('div'); item.className='button-item';
+      item.innerHTML=`<div class="button-item-top"><span class="button-title">Кнопка ${i+1}</span><div class="button-actions"><button type="button" data-up="${i}" ${i===0?'disabled style="opacity:.35"':''}>↑</button><button type="button" data-down="${i}" ${i===buttons.length-1?'disabled style="opacity:.35"':''}>↓</button><button type="button" data-delete="${i}" title="Удалить">✕</button></div></div>
+        <div class="button-fields"><div class="field"><label>Текст кнопки</label><input type="text" maxlength="64" data-text="${i}" placeholder="Например, Участвовать" value="${escapeHtml(b.text)}"></div>
+        <div class="field"><label>Ссылка (URL)</label><input type="url" data-url="${i}" placeholder="https://example.com" value="${escapeHtml(b.url)}"></div></div>`;
+      list.appendChild(item);
+    });
+    $('buttonCount').textContent=buttons.length+' / '+MAX_BUTTONS+' кнопок';
+    $('addButton').disabled=buttons.length>=MAX_BUTTONS;
+    $('addButton').style.opacity=buttons.length>=MAX_BUTTONS?'.45':'1';
+    list.querySelectorAll('[data-text]').forEach(el=>el.addEventListener('input',e=>{buttons[+e.target.dataset.text].text=e.target.value;renderPreview();}));
+    list.querySelectorAll('[data-url]').forEach(el=>el.addEventListener('input',e=>{buttons[+e.target.dataset.url].url=e.target.value;renderPreview();}));
+    list.querySelectorAll('[data-delete]').forEach(el=>el.addEventListener('click',()=>{buttons.splice(+el.dataset.delete,1);renderButtons();renderPreview();}));
+    list.querySelectorAll('[data-up]').forEach(el=>el.addEventListener('click',()=>{const i=+el.dataset.up;if(i>0){[buttons[i-1],buttons[i]]=[buttons[i],buttons[i-1]];renderButtons();renderPreview();}}));
+    list.querySelectorAll('[data-down]').forEach(el=>el.addEventListener('click',()=>{const i=+el.dataset.down;if(i<buttons.length-1){[buttons[i+1],buttons[i]]=[buttons[i],buttons[i+1]];renderButtons();renderPreview();}}));
+    renderPreview();
+  }
+  function renderLinkedText(text) {
+    const links=textLinks.filter(l=>l.text && safeUrl(l.url)).slice().sort((a,b)=>b.text.length-a.text.length);
+    let html='', pos=0;
+    while(pos<text.length){
+      let best=null, bestAt=-1;
+      for(const link of links){const at=text.indexOf(link.text,pos);if(at>=0&&(bestAt<0||at<bestAt||(at===bestAt&&link.text.length>best.text.length))){best=link;bestAt=at;}}
+      if(!best){html+=escapeHtml(text.slice(pos));break;}
+      html+=escapeHtml(text.slice(pos,bestAt));
+      html+='<a href="'+escapeHtml(safeUrl(best.url))+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(best.text)+'</a>';
+      pos=bestAt+best.text.length;
+    }
+    return html;
+  }
+  function renderTextLinkList(){
+    const box=$('textLinkList');
+    if(!textLinks.length){box.textContent='Выдели слово или фразу в тексте, нажми «Ссылка на выделенный текст» и введи URL.';return;}
+    box.innerHTML='Ссылки в тексте: '+textLinks.map((l,i)=>'<span style="display:inline-block;margin:3px 6px 3px 0;padding:5px 8px;border:1px solid #444;border-radius:8px">'+escapeHtml(l.text)+' <button type="button" data-remove-text-link="'+i+'" style="background:none;border:0;color:#ffaaaa">×</button></span>').join('');
+    box.querySelectorAll('[data-remove-text-link]').forEach(b=>b.addEventListener('click',()=>{textLinks.splice(+b.dataset.removeTextLink,1);renderPreview();}));
+  }
+  function renderPreview() {
+    const text=$('postText').value;
+    $('previewText').classList.toggle('preview-empty',!text);
+    if(!text) $('previewText').innerHTML='<span class="preview-empty">Текст поста появится здесь…</span>';
+    else $('previewText').innerHTML=renderLinkedText(text);
+    renderTextLinkList();
+    const img=$('previewImage');
+    if(imageData){img.src=imageData;img.style.display='block';}else{img.removeAttribute('src');img.style.display='none';}
+    const keyboard=$('previewKeyboard'); keyboard.innerHTML='';
+    keyboard.classList.toggle('stacked',buttonLayout==='stacked');
+    const visible=buttons.filter(b=>b.text.trim());
+    visible.forEach((b,i)=>{
+      const key=document.createElement('div');key.className='preview-key'+(visible.length%2===1&&i===visible.length-1?' span2':'')+(!safeUrl(b.url.trim())?' invalid':'');key.textContent=b.text;key.title=safeUrl(b.url.trim())?b.url:'Добавь корректную ссылку';keyboard.appendChild(key);
+    });
+    $('buttonCount').textContent=buttons.length+' / '+MAX_BUTTONS+' кнопок';
+  }
+  function formatRemaining(ms) {
+    const total=Math.max(0,Math.ceil(ms/1000));
+    const d=Math.floor(total/86400), h=Math.floor((total%86400)/3600), m=Math.floor((total%3600)/60), sec=total%60;
+    const totalMinutes=Math.ceil(total/60); const days=Math.floor(totalMinutes/1440), hours=Math.floor((totalMinutes%1440)/60), minutes=totalMinutes%60; return (days?days+'д ':'')+[hours,minutes].map(n=>String(n).padStart(2,'0')).join(':');
+  }
+  function updateCountdown() {
+    if(!countdownEnd) return;
+    const remaining=countdownEnd-Date.now();
+    $('inlineCountdownValue').textContent=formatRemaining(remaining);
+    $('previewInlineCountdown').style.display='block';
+    if(remaining<=0){clearInterval(countdownInterval);countdownInterval=null;countdownEnd=null;$('inlineCountdownValue').textContent='00:00';showToast('Таймер завершён. Для удаления опубликованного поста нужен сервер.');}
+  }
+  $('startCountdown').addEventListener('click',()=>{
+    const amount=Number($('deleteAfter').value);
+    if(!Number.isFinite(amount)||amount<=0){showToast('Укажи время больше нуля');return;}
+    if(countdownInterval)clearInterval(countdownInterval);
+    countdownEnd=Date.now()+amount*Number($('deleteUnit').value)*1000;
+    $('previewInlineCountdown').style.display='block';updateCountdown();countdownInterval=setInterval(updateCountdown,1000);showToast('Таймер отображается прямо в посте предпросмотра');
+  });
+  $('resetCountdown').addEventListener('click',()=>{if(countdownInterval)clearInterval(countdownInterval);countdownInterval=null;countdownEnd=null;$('previewInlineCountdown').style.display='none';showToast('Таймер сброшен');});
+  $('publishAs').addEventListener('change',()=>{
+    const mode=$('publishAs').value;
+    $('publishModeNote').textContent=mode==='channel'?'Для публикации в канале добавь бота в администраторы и выдай право публикации. Пост будет от имени канала.':mode==='business'?'Подключение настраивается в Telegram: Настройки → Telegram Business → Чат-боты → выбрать бота и выдать разрешения. Бот сможет действовать от имени бизнес-аккаунта в разрешённых личных чатах; это не превращает его в личный аккаунт для произвольной публикации в каналы. Нужен сервер, обрабатывающий business_connection и отправляющий сообщения через Bot API.':mode==='account'?'Для полноценной отправки как пользователь требуется отдельная серверная интеграция MTProto с авторизацией аккаунта. Не вставляй коды входа или сессию в HTML.':'При отправке через Bot API публикацию создаёт бот. Для настоящей отправки, обратного отсчёта в сообщении и автоудаления нужен сервер.';
+  });
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+    $('editorView').style.display=tab==='editor'?'grid':'none';
+    $('templatesView').style.display=tab==='templates'?'block':'none';
+    if(tab==='templates') renderTemplates();
+  }
+  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+  document.querySelectorAll('[data-layout]').forEach(b=>b.addEventListener('click',()=>{buttonLayout=b.dataset.layout;document.querySelectorAll('[data-layout]').forEach(x=>x.classList.toggle('active',x===b));renderPreview();}));
+  $('addButton').addEventListener('click',()=>{
+    if(buttons.length>=MAX_BUTTONS){showToast('Достигнут лимит конструктора');return;}
+    buttons.push({text:'Новая кнопка',url:'https://'});renderButtons();
+    const fields=$('buttonList').querySelectorAll('input'); if(fields.length) fields[fields.length-2].focus();
+  });
+  $('postText').addEventListener('input',renderPreview);
+  $('addTextLink').addEventListener('click',()=>{
+    const area=$('postText'), start=area.selectionStart, end=area.selectionEnd;
+    if(start===end){showToast('Сначала выдели слово или фразу в тексте');return;}
+    pendingTextSelection=area.value.slice(start,end);
+    $('linkPhrase').value=pendingTextSelection;$('linkUrl').value='';$('textLinkModal').classList.add('open');setTimeout(()=>$('linkUrl').focus(),40);
+  });
+  $('cancelTextLink').addEventListener('click',()=>$('textLinkModal').classList.remove('open'));
+  $('textLinkModal').addEventListener('click',e=>{if(e.target===$('textLinkModal'))$('textLinkModal').classList.remove('open');});
+  $('applyTextLink').addEventListener('click',()=>{
+    const url=safeUrl($('linkUrl').value.trim());
+    if(!pendingTextSelection){showToast('Выделенный текст не найден');return;}
+    if(!url){showToast('Введи корректную ссылку http:// или https://');return;}
+    textLinks.push({text:pendingTextSelection,url});$('textLinkModal').classList.remove('open');renderPreview();showToast('Ссылка добавлена к тексту');
+  });
+  $('clearTextLinks').addEventListener('click',()=>{textLinks=[];renderPreview();showToast('Текстовые ссылки удалены');});
+  $('imageInput').addEventListener('change',e=>{
+    const file=e.target.files&&e.target.files[0];if(!file)return;
+    if(!file.type.startsWith('image/')){showToast('Выбери файл изображения');return;}
+    if(file.size>8*1024*1024){showToast('Для стабильного хранения выбери изображение до 8 МБ');e.target.value='';return;}
+    const reader=new FileReader();reader.onload=()=>{imageData=String(reader.result);imageFileName=file.name;$('uploadTitle').textContent=file.name;$('uploadHint').textContent='Изображение загружено';$('imageTools').style.display='flex';renderPreview();};reader.readAsDataURL(file);
+  });
+  $('removeImage').addEventListener('click',()=>{imageData='';imageFileName='';$('imageInput').value='';$('uploadTitle').textContent='Загрузить изображение';$('uploadHint').textContent='PNG, JPG, WEBP · выбери файл на устройстве';$('imageTools').style.display='none';renderPreview();});
+  function openTemplateModal(id=null) {
+    pendingTemplateId=id;
+    const existing=id?templates.find(t=>t.id===id):null;
+    $('modalTitle').textContent=existing?'Переименовать шаблон':'Сохранить шаблон';
+    $('templateName').value=existing?existing.name:'';
+    $('templateModal').classList.add('open');setTimeout(()=>$('templateName').focus(),50);
+  }
+  function closeModal(){$('templateModal').classList.remove('open');pendingTemplateId=null;}
+  $('saveTemplate').addEventListener('click',()=>openTemplateModal());
+  $('newTemplate').addEventListener('click',()=>{switchTab('editor');openTemplateModal();});
+  $('cancelModal').addEventListener('click',closeModal);
+  $('templateModal').addEventListener('click',e=>{if(e.target===$('templateModal'))closeModal();});
+  $('confirmTemplate').addEventListener('click',()=>{
+    const name=$('templateName').value.trim();if(!name){showToast('Введи название шаблона');$('templateName').focus();return;}
+    if(pendingTemplateId){const t=templates.find(t=>t.id===pendingTemplateId);if(t)t.name=name;}
+    else {const p=payload();templates.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),name,text:p.text,image:p.image,imageName:p.imageName,buttons:p.buttons,textLinks:p.textLinks,publishAs:p.publishAs,buttonLayout:p.buttonLayout,countdownInPost:p.countdownInPost,deleteAfterSeconds:p.deleteAfterSeconds});}
+    saveTemplates();closeModal();showToast('Шаблон сохранён');
+  });
+  function renderTemplates(){
+    $('templateCount').textContent=templates.length;
+    const grid=$('templateGrid');grid.innerHTML='';
+    if(!templates.length){grid.innerHTML='<div class="empty">Пока нет сохранённых шаблонов.<br>Нажми «Добавить шаблон», чтобы создать первый.</div>';return;}
+    templates.forEach(t=>{
+      const card=document.createElement('div');card.className='template-card';
+      card.innerHTML=`<h3>${escapeHtml(t.name)}</h3><p>${escapeHtml(t.text||'Без текста')}\n\n${(t.buttons||[]).length} кнопок · ${escapeHtml(t.publishAs==='channel'?'пост в канале':t.publishAs==='business'?'Telegram Business':t.publishAs==='account'?'личный аккаунт (MTProto)':'от бота')}
+${t.deleteAfterSeconds?('Автоудаление: '+escapeHtml(String(t.deleteAfterSeconds))+' сек.'): 'Без автоудаления'}</p><div class="template-actions"><button class="btn primary small" data-load="${t.id}">Открыть</button><button class="btn small" data-rename="${t.id}">Название</button><button class="btn danger small" data-remove="${t.id}">Удалить</button></div>`;
+      grid.appendChild(card);
+    });
+    grid.querySelectorAll('[data-load]').forEach(el=>el.addEventListener('click',()=>{
+      const t=templates.find(x=>x.id===el.dataset.load);if(!t)return;
+      $('postText').value=t.text||'';imageData=t.image||'';imageFileName=t.imageName||'';buttons=(t.buttons||[]).map(b=>({text:b.text||'',url:b.url||''}));textLinks=(t.textLinks||[]).map(l=>({text:l.text||'',url:l.url||''}));buttonLayout=t.buttonLayout||'side';document.querySelectorAll('[data-layout]').forEach(x=>x.classList.toggle('active',x.dataset.layout===buttonLayout));$('publishAs').value=t.publishAs||'bot';$('publishAs').dispatchEvent(new Event('change'));const seconds=Number(t.deleteAfterSeconds||0);if(seconds>0){const units=[86400,3600,60,1];const unit=units.find(u=>seconds%u===0)||1;$('deleteUnit').value=String(unit);$('deleteAfter').value=String(seconds/unit);}else{$('deleteAfter').value='60';$('deleteUnit').value='60';}$('deleteUnit').dispatchEvent(new Event('change'));
+      $('uploadTitle').textContent=imageFileName||'Загрузить изображение';$('uploadHint').textContent=imageData?'Изображение загружено':'PNG, JPG, WEBP · выбери файл на устройстве';$('imageTools').style.display=imageData?'flex':'none';
+      $('imageInput').value='';renderButtons();switchTab('editor');showToast('Шаблон открыт');
+    }));
+    grid.querySelectorAll('[data-rename]').forEach(el=>el.addEventListener('click',()=>openTemplateModal(el.dataset.rename)));
+    grid.querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{templates=templates.filter(t=>t.id!==el.dataset.remove);saveTemplates();showToast('Шаблон удалён');}));
+  }
+  let sendMode='choose';
+  function getShareText(){
+    const p=payload();
+    let text=p.text||'';
+    if(p.textLinks&&p.textLinks.length){
+      p.textLinks.forEach(l=>{ if(l.text&&l.url&&!text.includes(l.url)) text += '\n'+l.text+': '+l.url; });
+    }
+    if(p.buttons&&p.buttons.length){
+      text += (text?'\n\n':'')+'Ссылки кнопок:\n'+p.buttons.filter(b=>b.text&&b.url).map(b=>b.text+' — '+b.url).join('\n');
+    }
+    return text;
+  }
+  function openSendModal(mode){
+    sendMode=mode;
+    $('sendModalTitle').textContent=mode==='choose'?'Выбрать чат':'Отправить по юзернейму';
+    $('usernameTarget').classList.toggle('open',mode==='username');
+    $('sendModalNote').textContent=mode==='choose'
+      ?'Откроется официальный экран Telegram для выбора чата. Туда можно передать текст и ссылки, но Telegram Share не переносит из HTML изображение, настоящие inline-кнопки и форматирование один-в-один.'
+      :'Введи публичный @username. Откроется чат в Telegram, а текст публикации и ссылки будут скопированы в буфер обмена для ручной вставки. Автоматически отправить сообщение от твоего аккаунта из HTML нельзя.';
+    $('sendModal').classList.add('open');
+    if(mode==='username') setTimeout(()=>$('targetUsername').focus(),50);
+  }
+  $('chooseChatBtn').addEventListener('click',()=>openSendModal('choose'));
+  $('sendByUsernameBtn').addEventListener('click',()=>openSendModal('username'));
+  $('cancelSendModal').addEventListener('click',()=>$('sendModal').classList.remove('open'));
+  $('sendModal').addEventListener('click',e=>{if(e.target===$('sendModal'))$('sendModal').classList.remove('open');});
+  $('continueSend').addEventListener('click',()=>{
+    const text=getShareText();
+    if(!text.trim()&&!imageData){showToast('Сначала добавь текст или изображение');return;}
+    if(sendMode==='choose'){
+      const shareUrl='https://t.me/share/url?url='+encodeURIComponent('')+'&text='+encodeURIComponent(text);
+      $('sendModal').classList.remove('open');
+      window.open(shareUrl,'_blank','noopener,noreferrer');
+      showToast('Выбери чат в Telegram и проверь сообщение перед отправкой');
+      return;
+    }
+    let username=$('targetUsername').value.trim().replace(/^@/,'');
+    if(!/^[A-Za-z0-9_]{5,32}$/.test(username)){showToast('Введи корректный Telegram-юзернейм');$('targetUsername').focus();return;}
+    const openChat=()=>{window.open('https://t.me/'+encodeURIComponent(username),'_blank','noopener,noreferrer');};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>{openChat();$('sendModal').classList.remove('open');showToast('Текст скопирован. Вставь его в чат и отправь вручную');}).catch(()=>{openChat();showToast('Чат открыт. Скопируй текст поста вручную');});}
+    else {openChat();$('sendModal').classList.remove('open');showToast('Чат открыт. Автоотправка из HTML недоступна');}
+  });
+  $('targetUsername').addEventListener('keydown',e=>{if(e.key==='Enter')$('continueSend').click();if(e.key==='Escape')$('sendModal').classList.remove('open');});
+  $('templateName').addEventListener('keydown',e=>{if(e.key==='Enter')$('confirmTemplate').click();if(e.key==='Escape')closeModal();});
+  renderButtons();renderTemplates();
+})();
+</script>
+</body>
+</html>
