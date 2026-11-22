@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Gift Cases</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --bg: #0e0f13;
+  --bg-card: #1a1c23;
+  --bg-card-2: #22242d;
+  --accent: #7c5cff;
+  --accent-2: #ffb020;
+  --text: #f2f2f7;
+  --text-dim: #8b8d98;
+  --green: #2ecc71;
+  --radius: 18px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ================= SPLASH ================= */
+#splash {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 30%, #2a1f55 0%, #0e0f13 70%);
+  z-index: 999;
+  animation: splash-fade 0.6s ease 1.6s forwards;
+}
+.splash-logo {
+  font-size: 64px;
+  animation: splash-pop 0.8s cubic-bezier(.34,1.56,.64,1);
+}
+.splash-title {
+  margin-top: 14px;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 4px;
+  opacity: 0;
+  animation: splash-title-in 0.6s ease 0.3s forwards;
+}
+.splash-loader {
+  margin-top: 28px;
+  width: 140px; height: 4px;
+  background: #2a2c36;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.splash-loader-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  animation: splash-load 1.3s ease forwards;
+}
+@keyframes splash-pop { 0% { transform: scale(0) rotate(-20deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+@keyframes splash-title-in { to { opacity: 1; transform: translateY(0); } from { transform: translateY(8px); } }
+@keyframes splash-load { to { width: 100%; } }
+@keyframes splash-fade { to { opacity: 0; visibility: hidden; } }
+
+/* ================= LAYOUT ================= */
+#app-header {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(14,15,19,0.85);
+  backdrop-filter: blur(10px);
+}
+.balance-pill, .profile-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg-card);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.profile-pill { color: var(--accent-2); }
+
+#app-main { padding: 12px 16px 90px; animation: fade-in 0.35s ease; }
+.screen { display: none; }
+.screen.active { display: block; animation: fade-in 0.3s ease; }
+@keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.hero-card {
+  background: linear-gradient(135deg, #3a2a8f, #7c5cff);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.hero-title { font-size: 19px; font-weight: 800; }
+.hero-subtitle { font-size: 13px; color: #e3ddff; margin-top: 4px; }
+
+.quick-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
+.quick-btn {
+  background: var(--bg-card); border: none; border-radius: var(--radius);
+  color: var(--text); padding: 16px 6px; display: flex; flex-direction: column;
+  align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+}
+.quick-btn:active { transform: scale(0.95); }
+.quick-icon { font-size: 26px; }
+
+.section-title { font-size: 15px; font-weight: 700; margin: 10px 0 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; }
+
+.inventory-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+.inventory-row::-webkit-scrollbar { display: none; }
+
+/* ================= CASES ================= */
+.cases-list { display: flex; flex-direction: column; gap: 14px; }
+.case-card {
+  background: var(--bg-card); border-radius: var(--radius); padding: 16px;
+  display: flex; align-items: center; gap: 14px;
+}
+.case-card.premium { background: linear-gradient(135deg, #332200, #4a3200); border: 1px solid #ffb02044; }
+.case-icon { font-size: 40px; width: 60px; text-align: center; }
+.case-info { flex: 1; }
+.case-name { font-weight: 800; font-size: 16px; }
+.case-desc { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.case-price { font-weight: 700; font-size: 13px; margin-top: 6px; color: var(--accent-2); }
+.btn-open {
+  background: var(--accent); color: white; border: none; border-radius: 12px;
+  padding: 10px 16px; font-weight: 700; font-size: 13px;
+}
+.btn-open:active { transform: scale(0.95); }
+.btn-open:disabled { opacity: 0.45; }
+
+/* ================= ROULETTE ================= */
+.overlay {
+  position: fixed; inset: 0; background: rgba(5,5,8,0.92);
+  display: none; align-items: center; justify-content: center; z-index: 500;
+  flex-direction: column;
+}
+.overlay.active { display: flex; }
+.roulette-wrap { position: relative; width: 100%; max-width: 480px; overflow: hidden; height: 140px; }
+.roulette-pointer {
+  position: absolute; left: 50%; top: 0; bottom: 0; width: 3px; background: var(--accent-2);
+  transform: translateX(-50%); z-index: 2; box-shadow: 0 0 10px var(--accent-2);
+}
+.roulette-track { display: flex; position: absolute; left: 0; top: 0; height: 100%; will-change: transform; }
+.roulette-item {
+  width: 110px; height: 110px; margin: 15px 6px; border-radius: 14px; overflow: hidden;
+  background: var(--bg-card-2); flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+}
+.roulette-item img { width: 100%; height: 100%; object-fit: cover; }
+.roulette-item.is-empty { font-size: 34px; }
+
+/* ================= RESULT ================= */
+.result-card { text-align: center; max-width: 280px; }
+#result-video { width: 220px; height: 220px; border-radius: 20px; object-fit: cover; display: none; }
+.result-empty-icon { font-size: 80px; display: none; }
+.result-name { font-size: 20px; font-weight: 800; margin: 16px 0 20px; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #5a3fd6); color: white; border: none;
+  border-radius: 14px; padding: 14px 32px; font-weight: 800; font-size: 15px; width: 100%;
+}
+.btn-primary:active { transform: scale(0.96); }
+
+/* ================= PROFILE ================= */
+.profile-card { background: var(--bg-card); border-radius: var(--radius); padding: 24px; text-align: center; margin-bottom: 10px; }
+.profile-avatar { font-size: 48px; }
+.profile-name { font-size: 18px; font-weight: 800; margin-top: 8px; }
+.profile-id { font-size: 12px; color: var(--text-dim); }
+
+.inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.inventory-item { background: var(--bg-card); border-radius: 14px; padding: 10px; text-align: center; }
+.inventory-item img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; }
+.inventory-item span { display: block; font-size: 11px; margin-top: 6px; color: var(--text-dim); }
+
+.empty-state { text-align: center; color: var(--text-dim); padding: 60px 0; }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+.owner-panel { margin-top: 20px; background: linear-gradient(135deg, #2a1f0f, #332500); border: 1px solid #ffb02044; border-radius: var(--radius); padding: 16px; }
+.owner-stat-row { display: flex; justify-content: space-between; margin: 10px 0; }
+.owner-stat { text-align: center; flex: 1; }
+.owner-stat span { display: block; font-size: 20px; font-weight: 800; color: var(--accent-2); }
+.owner-stat label { font-size: 11px; color: var(--text-dim); }
+.owner-hint { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+
+/* ================= NAV ================= */
+#bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+  display: flex; background: rgba(20,21,27,0.95); backdrop-filter: blur(10px);
+  border-top: 1px solid #2a2c36; padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+}
+.nav-btn {
+  flex: 1; background: none; border: none; color: var(--text-dim);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font-size: 11px; font-weight: 600; padding: 6px 0;
+}
+.nav-btn span { font-size: 20px; }
+.nav-btn.active { color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+  <!-- ===== ЗАСТАВКА ПРИ ЗАПУСКЕ ===== -->
+  <div id="splash">
+    <div class="splash-logo">🎁</div>
+    <div class="splash-title">GIFT CASES</div>
+    <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+  </div>
+
+  <!-- ===== ШАПКА (баланс) ===== -->
+  <header id="app-header">
+    <div class="balance-pill">
+      <span class="star">⭐</span>
+      <span id="balance-value">0</span>
+    </div>
+    <div class="profile-pill" id="owner-badge" style="display:none;">👑 Владелец</div>
+  </header>
+
+  <!-- ===== ЭКРАНЫ ===== -->
+  <main id="app-main">
+
+    <section class="screen active" id="screen-home">
+      <div class="hero-card">
+        <div class="hero-title">Добро пожаловать 👋</div>
+        <div class="hero-subtitle">Открывай кейсы и собирай эксклюзивные подарки</div>
+      </div>
+      <div class="quick-grid">
+        <button class="quick-btn" data-goto="cases">
+          <span class="quick-icon">🎁</span><span>Кейсы</span>
+        </button>
+        <button class="quick-btn" data-goto="games">
+          <span class="quick-icon">🎮</span><span>Игры</span>
+        </button>
+        <button class="quick-btn" data-goto="profile">
+          <span class="quick-icon">👤</span><span>Профиль</span>
+        </button>
+      </div>
+      <div class="section-title">Последние подарки</div>
+      <div id="recent-inventory" class="inventory-row"></div>
+    </section>
+
+    <section class="screen" id="screen-cases">
+      <div class="section-title">Кейсы</div>
+      <div id="cases-list" class="cases-list"></div>
+
+      <!-- Рулетка открытия -->
+      <div id="roulette-overlay" class="overlay">
+        <div class="roulette-wrap">
+          <div class="roulette-pointer"></div>
+          <div id="roulette-track" class="roulette-track"></div>
+        </div>
+      </div>
+
+      <!-- Экран результата -->
+      <div id="result-overlay" class="overlay">
+        <div class="result-card">
+          <video id="result-video" autoplay loop muted playsinline></video>
+          <div id="result-empty-icon" class="result-empty-icon">💨</div>
+          <div id="result-name" class="result-name"></div>
+          <button class="btn-primary" id="result-close">Забрать</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-games">
+      <div class="section-title">Игры</div>
+      <div class="empty-state">
+        <div class="empty-icon">🚧</div>
+        <div>Игры скоро появятся здесь</div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-profile">
+      <div class="profile-card">
+        <div class="profile-avatar">👤</div>
+        <div id="profile-name" class="profile-name">—</div>
+        <div id="profile-id" class="profile-id"></div>
+      </div>
+      <div class="section-title">Инвентарь</div>
+      <div id="inventory-grid" class="inventory-grid"></div>
+
+      <div id="owner-panel" class="owner-panel" style="display:none;">
+        <div class="section-title">👑 Панель владельца</div>
+        <div class="owner-stat-row">
+          <div class="owner-stat"><span id="stat-users">0</span><label>Юзеров</label></div>
+          <div class="owner-stat"><span id="stat-openings">0</span><label>Открытий</label></div>
+          <div class="owner-stat"><span id="stat-stars">0</span><label>⭐ Заработано</label></div>
+        </div>
+        <div class="owner-hint">Управление шансами, балансом и банами — через команды боту (/admin, /give, /setweight).</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== НИЖНЯЯ НАВИГАЦИЯ ===== -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-screen="home"><span>🏠</span>Главная</button>
+    <button class="nav-btn" data-screen="cases"><span>🎁</span>Кейсы</button>
+    <button class="nav-btn" data-screen="games"><span>🎮</span>Игры</button>
+    <button class="nav-btn" data-screen="profile"><span>👤</span>Профиль</button>
+  </nav>
+
+<script>
+const tg = window.Telegram?.WebApp;
+tg?.ready();
+tg?.expand();
+
+// Базовый URL API. Если фронт и api.py раздаются с одного домена (StaticFiles
+// в api.py) — можно оставить пустую строку.
+const API_BASE = "";
+const initData = tg?.initData || "";
+
+let CASES = [];
+
+// ---------------------------------------------------------------------------
+// НАВИГАЦИЯ
+// ---------------------------------------------------------------------------
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => showScreen(btn.dataset.screen));
+});
+document.querySelectorAll("[data-goto]").forEach(btn => {
+  btn.addEventListener("click", () => showScreen(btn.dataset.goto));
+});
+
+function showScreen(name) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(`screen-${name}`).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.screen === name));
+  tg?.HapticFeedback?.impactOccurred("light");
+}
+
+// ---------------------------------------------------------------------------
+// ЗАГРУЗКА ДАННЫХ
+// ---------------------------------------------------------------------------
+async function loadProfile() {
+  const res = await fetch(`${API_BASE}/api/profile?initData=${encodeURIComponent(initData)}`);
+  if (!res.ok) return;
+  const data = await res.json();
+
+  document.getElementById("balance-value").textContent = data.balance;
+  document.getElementById("profile-name").textContent = data.first_name || "Игрок";
+  document.getElementById("profile-id").textContent = `ID: ${data.telegram_id}`;
+  document.getElementById("owner-badge").style.display = data.is_owner ? "flex" : "none";
+  document.getElementById("owner-panel").style.display = data.is_owner ? "block" : "none";
+
+  renderInventory(data.inventory);
+  if (data.is_owner) loadStats();
+  return data;
+}
+
+async function loadStats() {
+  // простая owner-статистика через отдельный профильный ответ не отдаём -
+  // при желании расширь api.py эндпоинтом /api/admin/stats с проверкой is_owner
+}
+
+async function loadCases() {
+  const res = await fetch(`${API_BASE}/api/cases`);
+  CASES = await res.json();
+  renderCases();
+}
+
+function renderInventory(items) {
+  const grid = document.getElementById("inventory-grid");
+  const recent = document.getElementById("recent-inventory");
+  grid.innerHTML = "";
+  recent.innerHTML = "";
+
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">🎒</div>Пока пусто</div>`;
+  }
+
+  items.forEach(it => {
+    const el = document.createElement("div");
+    el.className = "inventory-item";
+    el.innerHTML = `<img src="assets/gifts/${thumbFor(it.video)}"><span>${it.name}</span>`;
+    grid.appendChild(el);
+  });
+
+  items.slice(0, 8).forEach(it => {
+    const el = document.createElement("div");
+    el.className = "inventory-item";
+    el.style.minWidth = "90px";
+    el.innerHTML = `<img src="assets/gifts/${thumbFor(it.video)}"><span>${it.name}</span>`;
+    recent.appendChild(el);
+  });
+}
+
+function thumbFor(videoFile) {
+  if (!videoFile) return "";
+  return videoFile.replace(".mp4", ".jpg");
+}
+
+function renderCases() {
+  const list = document.getElementById("cases-list");
+  list.innerHTML = "";
+  CASES.forEach(c => {
+    const isPremium = c.price_stars > 0;
+    const card = document.createElement("div");
+    card.className = `case-card ${isPremium ? "premium" : ""}`;
+    card.innerHTML = `
+      <div class="case-icon">${isPremium ? "💎" : "🎁"}</div>
+      <div class="case-info">
+        <div class="case-name">${c.name}</div>
+        <div class="case-desc">${isPremium ? "Шанс на Мишку 50%" : "Раз в 8 часов, бесплатно"}</div>
+        <div class="case-price">${isPremium ? `⭐ ${c.price_stars}` : "Бесплатно"}</div>
+      </div>
+      <button class="btn-open" data-slug="${c.slug}">Открыть</button>
+    `;
+    list.appendChild(card);
+  });
+
+  list.querySelectorAll(".btn-open").forEach(btn => {
+    btn.addEventListener("click", () => handleOpenCase(btn.dataset.slug));
+  });
+}
+
+// ---------------------------------------------------------------------------
+// ОТКРЫТИЕ КЕЙСА
+// ---------------------------------------------------------------------------
+async function handleOpenCase(slug) {
+  const caseData = CASES.find(c => c.slug === slug);
+  tg?.HapticFeedback?.impactOccurred("medium");
+
+  if (caseData.price_stars === 0) {
+    try {
+      const res = await fetch(`${API_BASE}/api/open_case/free?initData=${encodeURIComponent(initData)}`, { method: "POST" });
+      if (!res.ok) {
+        const err = await res.json();
+        tg?.showAlert ? tg.showAlert(err.detail) : alert(err.detail);
+        return;
+      }
+      const item = await res.json();
+      playRoulette(caseData, item);
+    } catch (e) {
+      console.error(e);
+    }
+  } else {
+    // Платный кейс — открываем инвойс Telegram Stars
+    try {
+      const res = await fetch(`${API_BASE}/api/create_invoice?initData=${encodeURIComponent(initData)}`, { method: "POST" });
+      const { invoice_url } = await res.json();
+      tg.openInvoice(invoice_url, async (status) => {
+        if (status === "paid") {
+          const r = await fetch(`${API_BASE}/api/latest_opening?initData=${encodeURIComponent(initData)}`);
+          const item = await r.json();
+          playRoulette(caseData, item);
+        }
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+
+function playRoulette(caseData, winningItem) {
+  const overlay = document.getElementById("roulette-overlay");
+  const track = document.getElementById("roulette-track");
+  overlay.classList.add("active");
+  track.style.transition = "none";
+  track.style.transform = "translateX(0)";
+  track.innerHTML = "";
+
+  // Строим длинную ленту случайных предметов кейса, последний = выигрыш
+  const pool = caseData.items;
+  const REEL_LENGTH = 40;
+  const reel = [];
+  for (let i = 0; i < REEL_LENGTH - 1; i++) {
+    reel.push(pool[Math.floor(Math.random() * pool.length)]);
+  }
+  reel.push({ ...winningItem, ...pool.find(p => p.name === winningItem.name) });
+
+  reel.forEach(item => {
+    const el = document.createElement("div");
+    if (item.is_empty) {
+      el.className = "roulette-item is-empty";
+      el.textContent = "💨";
+    } else {
+      el.className = "roulette-item";
+      el.innerHTML = `<img src="assets/gifts/${thumbFor(item.video)}">`;
+    }
+    track.appendChild(el);
+  });
+
+  const itemWidth = 140; // 110 + 2*15 margin
+  const containerWidth = track.parentElement.offsetWidth;
+  const targetOffset = itemWidth * (REEL_LENGTH - 1) - containerWidth / 2 + itemWidth / 2;
+
+  requestAnimationFrame(() => {
+    track.style.transition = "transform 4.2s cubic-bezier(.12,.74,.14,1)";
+    track.style.transform = `translateX(-${targetOffset}px)`;
+  });
+
+  setTimeout(() => {
+    overlay.classList.remove("active");
+    showResult(winningItem);
+    tg?.HapticFeedback?.notificationOccurred(winningItem.is_empty ? "warning" : "success");
+  }, 4400);
+}
+
+function showResult(item) {
+  const overlay = document.getElementById("result-overlay");
+  const video = document.getElementById("result-video");
+  const emptyIcon = document.getElementById("result-empty-icon");
+  const name = document.getElementById("result-name");
+
+  if (item.is_empty) {
+    video.style.display = "none";
+    emptyIcon.style.display = "block";
+    name.textContent = "Пусто. Повезёт в следующий раз!";
+  } else {
+    emptyIcon.style.display = "none";
+    video.style.display = "block";
+    video.src = `assets/gifts/${item.video}`;
+    name.textContent = `Вы выиграли: ${item.name} 🎉`;
+  }
+  overlay.classList.add("active");
+}
+
+document.getElementById("result-close").addEventListener("click", () => {
+  document.getElementById("result-overlay").classList.remove("active");
+  loadProfile();
+});
+
+// ---------------------------------------------------------------------------
+// СТАРТ
+// ---------------------------------------------------------------------------
+(async function init() {
+  await Promise.all([loadProfile(), loadCases()]);
+})();
+
+</script>
+</body>
+</html>
